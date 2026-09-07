@@ -55,17 +55,25 @@ class Note extends Model {
      * 保存笔记（新增或更新），同时解析双向链接
      */
     async saveNote(data) {
+        // 处理未分类情况：cate_id 为 null/undefined 时设为 0
+        if(data.cate_id === null || data.cate_id === undefined) {
+            data.cate_id = 0;
+        }
+
         if(data.id) {
+            // 更新笔记
             data.update_time = Math.floor(Date.now() / 1000);
-            const result = await this.db.where({id: data.id}).update(data);
+            await this.db.where({id: data.id}).update(data);
             await this.parseLinks(data.id, data.content || '');
-            return result;
+            return true;
         } else {
+            // 创建笔记
             data.add_time = Math.floor(Date.now() / 1000);
             data.update_time = Math.floor(Date.now() / 1000);
-            const id = await this.db.insert(data);
-            await this.parseLinks(id, data.content || '');
-            return id;
+            const result = await this.db.insert(data);
+            const newId = result.insertId || result;
+            await this.parseLinks(newId, data.content || '');
+            return newId;
         }
     }
     
