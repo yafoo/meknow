@@ -400,10 +400,12 @@ html, body {
     align-items: center;
     border-bottom: 1px solid #e4e7ed;
     background: #f5f7fa;
+    min-width: 0;
 }
 
 .tabs-bar .el-tabs {
     flex: 1;
+    min-width: 0;
     margin-bottom: 0;
 }
 
