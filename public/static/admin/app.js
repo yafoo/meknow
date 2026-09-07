@@ -220,6 +220,11 @@ const api = {
         return await request('/api/cate/edit', { method: 'POST', body: data });
     },
 
+    // 分类排序
+    async sortCate(items) {
+        return await request('/api/cate/sort', { method: 'POST', body: { items } });
+    },
+
     // 删除分类
     async deleteCate(id) {
         return await request(`/api/cate/delete?id=${id}`);
@@ -246,6 +251,14 @@ const api = {
             method: 'POST',
             body: { id, is_pinned: isPinned }
         });
+    },
+
+    // 笔记排序
+    async sortNotes(items) {
+        return await request('/api/note/sort', {
+            method: 'POST',
+            body: { items }
+        });
     }
 };
 
@@ -263,11 +276,15 @@ const CategoryTree = {
             </div>
             <el-tree
                 :data="categories"
-                :props="{ label: 'name', children: 'children' }"
+                :props="treeProps"
                 node-key="id"
                 highlight-current
                 default-expand-all
                 :indent="20"
+                draggable
+                :allow-drop="allowDrop"
+                :allow-drag="allowDrag"
+                @node-drop="handleDrop"
                 @node-click="handleNodeClick"
             >
                 <template #default="{ node, data }">
@@ -341,9 +358,17 @@ const CategoryTree = {
                     <el-icon><User /></el-icon>
                     <span class="username">{{ store.username || '未登录' }}</span>
                 </div>
-                <el-button size="small" text @click="logout">
-                    <el-icon><SwitchButton /></el-icon> 退出
-                </el-button>
+                <div class="tree-footer-actions">
+                    <el-button size="small" text @click="$router.push('/admin/settings')" title="站点设置">
+                        <el-icon><Setting /></el-icon>
+                    </el-button>
+                    <el-button size="small" text @click="$router.push('/admin/tokens')" title="Token 管理">
+                        <el-icon><Key /></el-icon>
+                    </el-button>
+                    <el-button size="small" text @click="logout" title="退出登录">
+                        <el-icon><SwitchButton /></el-icon>
+                    </el-button>
+                </div>
             </div>
 
             <!-- 用户编辑弹窗 -->
@@ -399,6 +424,59 @@ const CategoryTree = {
             } else {
                 store.currentCateId = data.id;
             }
+        };
+
+        // 分类树配置
+        const treeProps = {
+            label: 'name',
+            children: 'children'
+        };
+
+        // 拖拽控制：虚拟节点不允许拖拽
+        const allowDrag = (draggingNode) => {
+            return !draggingNode.data.is_virtual;
+        };
+
+        // 拖拽控制：不允许放到虚拟节点内部
+        const allowDrop = (draggingNode, dropNode, type) => {
+            if(dropNode.data.is_virtual) {
+                return false;
+            }
+            // 不允许拖到"全部笔记"下面成为子节点
+            return true;
+        };
+
+        // 拖拽结束：保存排序
+        const handleDrop = (draggingNode, dropNode, dropType, ev) => {
+            // 收集所有分类的排序数据
+            const items = [];
+            const collectItems = (nodes, pid, sortBase) => {
+                let sort = sortBase;
+                for(const node of nodes) {
+                    if(node.is_virtual) continue;
+                    items.push({ id: node.id, sort: sort, pid: pid });
+                    sort++;
+                    if(node.children && node.children.length > 0) {
+                        sort = collectItems(node.children, node.id, sort);
+                    }
+                }
+                return sort;
+            };
+
+            // 遍历分类树（跳过虚拟节点"全部笔记"）
+            const realCats = store.categories.filter(c => !c.is_virtual);
+            collectItems(realCats, 0, 0);
+
+            // 调用后端保存排序
+            api.sortCate(items).then(res => {
+                if(res.state === 1) {
+                    ElementPlus.ElMessage.success('排序已保存');
+                } else {
+                    ElementPlus.ElMessage.error(res.msg);
+                    // 刷新恢复
+                    store.loadCategories();
+                }
+            });
         };
 
         const selectIcon = (emoji) => {
@@ -586,7 +664,11 @@ const CategoryTree = {
         return {
             store,
             categories: computed(() => store.categories),
+            treeProps,
             handleNodeClick,
+            allowDrag,
+            allowDrop,
+            handleDrop,
             dialogVisible,
             dialogTitle,
             cateForm,
@@ -628,7 +710,7 @@ const NoteList = {
                     </template>
                 </el-input>
             </div>
-            <div class="note-list-body" v-loading="store.notesLoading">
+            <div class="note-list-body" ref="noteListBody" v-loading="store.notesLoading">
                 <div v-if="store.notes.length === 0 && !store.notesLoading" class="note-list-empty">
                     <span>暂无笔记</span>
                 </div>
@@ -666,7 +748,46 @@ const NoteList = {
     `,
     setup() {
         const searchKeyword = ref('');
+        const noteListBody = ref(null);
         let searchTimer = null;
+        let sortableInstance = null;
+
+        const initSortable = () => {
+            if(!noteListBody.value) return;
+
+            // 销毁旧实例
+            if(sortableInstance) {
+                sortableInstance.destroy();
+            }
+
+            sortableInstance = Sortable.create(noteListBody.value, {
+                animation: 150,
+                handle: '.note-item',
+                filter: '.note-list-empty',
+                onEnd: (evt) => {
+                    if(evt.oldIndex === evt.newIndex) return;
+
+                    // 更新 store.notes 数组顺序
+                    const moved = store.notes.splice(evt.oldIndex, 1)[0];
+                    store.notes.splice(evt.newIndex, 0, moved);
+
+                    // 收集排序数据并保存
+                    const items = store.notes.map((note, index) => ({
+                        id: note.id,
+                        sort: index
+                    }));
+
+                    api.sortNotes(items).then(res => {
+                        if(res.state === 1) {
+                            ElementPlus.ElMessage.success('排序已保存');
+                        } else {
+                            ElementPlus.ElMessage.error(res.msg);
+                            store.loadNotes(store.currentCateId);
+                        }
+                    });
+                }
+            });
+        };
 
         const onSearch = () => {
             clearTimeout(searchTimer);
@@ -793,13 +914,25 @@ const NoteList = {
         });
 
         // 初始加载
-        onMounted(() => {
-            store.loadNotes(store.currentCateId);
+        onMounted(async () => {
+            await store.loadNotes(store.currentCateId);
+            // 等待 DOM 更新后初始化 SortableJS
+            nextTick(() => {
+                initSortable();
+            });
+        });
+
+        // 监听笔记列表变化，重新初始化 SortableJS
+        watch(() => store.notes.length, () => {
+            nextTick(() => {
+                initSortable();
+            });
         });
 
         return {
             store,
             searchKeyword,
+            noteListBody,
             onSearch,
             formatTime,
             handleCommand,
@@ -847,6 +980,17 @@ const NoteEditor = {
             </div>
             <div class="editor-content">
                 <div id="vditor"></div>
+            </div>
+            <div class="backlinks-panel" v-if="backlinks && backlinks.length > 0">
+                <div class="backlinks-header">
+                    <el-icon><Connection /></el-icon>
+                    <span>反向链接 ({{backlinks.length}})</span>
+                </div>
+                <div class="backlinks-list">
+                    <a v-for="link in backlinks" :key="link.id" class="backlink-item" @click.prevent="openBacklink(link)">
+                        {{link.title || '无标题'}}
+                    </a>
+                </div>
             </div>
         </div>
     `,
@@ -916,9 +1060,22 @@ const NoteEditor = {
             initVditor();
         });
 
+        const backlinks = computed(() => {
+            if(note.value && note.value.backlinks) {
+                return note.value.backlinks;
+            }
+            return [];
+        });
+
+        const openBacklink = (link) => {
+            store.openNote(link.id);
+        };
+
         return {
             note,
             flatCategories,
+            backlinks,
+            openBacklink,
             markModified
         };
     }
@@ -929,12 +1086,31 @@ const Workspace = {
     components: { CategoryTree, NoteList, NoteEditor },
     template: `
         <div class="workspace">
+            <!-- 移动端顶栏 -->
+            <div class="mobile-header">
+                <el-button text @click="toggleSidebar" class="mobile-menu-btn">
+                    <el-icon><Menu /></el-icon>
+                </el-button>
+                <span class="mobile-title">Meknow</span>
+                <div class="mobile-header-actions">
+                    <el-button text @click="$router.push('/admin/settings')">
+                        <el-icon><Setting /></el-icon>
+                    </el-button>
+                </div>
+            </div>
+
+            <!-- 遮罩层 -->
+            <div class="sidebar-overlay" v-if="sidebarVisible" @click="sidebarVisible = false"></div>
+
             <el-container>
-                <el-aside width="200px" class="workspace-aside">
+                <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': sidebarVisible }">
                     <CategoryTree />
                 </el-aside>
-                <el-aside width="280px" class="note-list-aside">
+                <el-aside width="280px" class="note-list-aside" :class="{ 'note-list-hidden': noteListHidden }">
                     <NoteList />
+                    <el-button class="toggle-note-list" text @click="noteListHidden = !noteListHidden">
+                        <el-icon><ArrowRight v-if="noteListHidden" /><ArrowLeft v-else /></el-icon>
+                    </el-button>
                 </el-aside>
                 <el-container class="workspace-main">
                     <el-main class="workspace-content">
@@ -989,6 +1165,13 @@ const Workspace = {
         </div>
     `,
     setup() {
+        const sidebarVisible = ref(false);
+        const noteListHidden = ref(false);
+
+        const toggleSidebar = () => {
+            sidebarVisible.value = !sidebarVisible.value;
+        };
+
         const createNote = async () => {
             // 不再检查分类，直接创建笔记
             const res = await api.createNote({
@@ -1081,6 +1264,9 @@ const Workspace = {
 
         return {
             store,
+            sidebarVisible,
+            noteListHidden,
+            toggleSidebar,
             createNote,
             handleTabRemove,
             saveNote,
@@ -1089,10 +1275,282 @@ const Workspace = {
     }
 };
 
+
+// ==================== 站点设置页面 ====================
+const SiteSettings = {
+    template: `
+        <div class="settings-page">
+            <div class="settings-header">
+                <h2>站点设置</h2>
+            </div>
+            <div class="settings-content" v-loading="loading">
+                <el-form label-width="100px" class="settings-form">
+                    <el-form-item v-for="item in configItems" :key="item.key" :label="item.title">
+                        <el-input v-if="item.type === 'input'" v-model="item.value" />
+                        <el-input v-else-if="item.type === 'textarea'" v-model="item.value" type="textarea" :rows="3" />
+                        <el-input v-else v-model="item.value" />
+                        <div v-if="item.tips" class="form-tips">{{item.tips}}</div>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="saveSettings" :loading="saving">保存设置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+    `,
+    setup() {
+        const loading = ref(true);
+        const saving = ref(false);
+        const configItems = ref([]);
+
+        const loadConfig = async () => {
+            loading.value = true;
+            try {
+                const res = await request('/api/site/get');
+                if(res.state === 1) {
+                    configItems.value = res.data;
+                }
+            } catch(e) {
+                ElementPlus.ElMessage.error('加载配置失败');
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        const saveSettings = async () => {
+            saving.value = true;
+            try {
+                const items = configItems.value.map(item => ({
+                    key: item.key,
+                    value: item.value
+                }));
+                const res = await request('/api/site/save', {
+                    method: 'POST',
+                    body: { items }
+                });
+                if(res.state === 1) {
+                    ElementPlus.ElMessage.success('保存成功');
+                } else {
+                    ElementPlus.ElMessage.error(res.msg || '保存失败');
+                }
+            } catch(e) {
+                ElementPlus.ElMessage.error('保存失败');
+            } finally {
+                saving.value = false;
+            }
+        };
+
+        onMounted(() => {
+            loadConfig();
+        });
+
+        return {
+            loading,
+            saving,
+            configItems,
+            saveSettings
+        };
+    }
+};
+
+// ==================== Token 管理页面 ====================
+const TokenManage = {
+    template: `
+        <div class="token-page">
+            <div class="token-header">
+                <h2>API Token 管理</h2>
+                <el-button type="primary" @click="showCreateDialog">
+                    <el-icon><Plus /></el-icon> 创建 Token
+                </el-button>
+            </div>
+            <div class="token-list" v-loading="loading">
+                <el-table :data="tokens" stripe>
+                    <el-table-column prop="name" label="名称" />
+                    <el-table-column prop="token" label="Token">
+                        <template #default="{ row }">
+                            <span class="token-value">{{ maskToken(row.token) }}</span>
+                            <el-button size="small" text @click="copyToken(row.token)">
+                                <el-icon><CopyDocument /></el-icon>
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="过期时间" width="180">
+                        <template #default="{ row }">
+                            <span v-if="row.expire_time === 0">永不过期</span>
+                            <span v-else>{{ formatTime(row.expire_time) }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="100">
+                        <template #default="{ row }">
+                            <el-button size="small" type="danger" text @click="deleteToken(row)">删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <div v-if="tokens.length === 0 && !loading" class="token-empty">
+                    暂无 Token，点击上方按钮创建
+                </div>
+            </div>
+
+            <!-- 创建 Token 对话框 -->
+            <el-dialog v-model="dialogVisible" title="创建 Token" width="450px">
+                <el-form :model="tokenForm" label-width="80px">
+                    <el-form-item label="名称">
+                        <el-input v-model="tokenForm.name" placeholder="如：手机端API" />
+                    </el-form-item>
+                    <el-form-item label="过期时间">
+                        <el-select v-model="tokenForm.expire_type" style="width: 100%">
+                            <el-option label="永不过期" value="0" />
+                            <el-option label="30天" value="30" />
+                            <el-option label="90天" value="90" />
+                            <el-option label="1年" value="365" />
+                            <el-option label="自定义" value="custom" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item v-if="tokenForm.expire_type === 'custom'" label="自定义天数">
+                        <el-input-number v-model="tokenForm.custom_days" :min="1" :max="3650" />
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <el-button @click="dialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="createToken" :loading="creating">创建</el-button>
+                </template>
+            </el-dialog>
+        </div>
+    `,
+    setup() {
+        const loading = ref(true);
+        const creating = ref(false);
+        const dialogVisible = ref(false);
+        const tokens = ref([]);
+        const tokenForm = reactive({
+            name: '',
+            expire_type: '0',
+            custom_days: 30
+        });
+
+        const loadTokens = async () => {
+            loading.value = true;
+            try {
+                const res = await request('/api/token/list');
+                if(res.state === 1) {
+                    tokens.value = res.data;
+                }
+            } catch(e) {
+                ElementPlus.ElMessage.error('加载 Token 失败');
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        const showCreateDialog = () => {
+            tokenForm.name = '';
+            tokenForm.expire_type = '0';
+            tokenForm.custom_days = 30;
+            dialogVisible.value = true;
+        };
+
+        const createToken = async () => {
+            if(!tokenForm.name) {
+                ElementPlus.ElMessage.warning('请输入名称');
+                return;
+            }
+
+            creating.value = true;
+            try {
+                let expire_time = 0;
+                if(tokenForm.expire_type === 'custom') {
+                    expire_time = Math.floor(Date.now() / 1000) + tokenForm.custom_days * 86400;
+                } else if(tokenForm.expire_type !== '0') {
+                    expire_time = Math.floor(Date.now() / 1000) + parseInt(tokenForm.expire_type) * 86400;
+                }
+
+                const res = await request('/api/token/create', {
+                    method: 'POST',
+                    body: {
+                        name: tokenForm.name,
+                        expire_time: expire_time
+                    }
+                });
+
+                if(res.state === 1) {
+                    ElementPlus.ElMessage.success('创建成功');
+                    dialogVisible.value = false;
+                    loadTokens();
+                } else {
+                    ElementPlus.ElMessage.error(res.msg || '创建失败');
+                }
+            } catch(e) {
+                ElementPlus.ElMessage.error('创建失败');
+            } finally {
+                creating.value = false;
+            }
+        };
+
+        const deleteToken = async (token) => {
+            try {
+                await ElementPlus.ElMessageBox.confirm(
+                    `确定删除 Token「${token.name}」吗？删除后使用此 Token 的客户端将无法访问。`,
+                    '删除确认',
+                    { type: 'warning' }
+                );
+
+                const res = await request(`/api/token/delete?id=${token.id}`);
+                if(res.state === 1) {
+                    ElementPlus.ElMessage.success('删除成功');
+                    loadTokens();
+                } else {
+                    ElementPlus.ElMessage.error(res.msg || '删除失败');
+                }
+            } catch(e) {
+                // 用户取消
+            }
+        };
+
+        const maskToken = (token) => {
+            if(!token || token.length < 16) return token;
+            return token.substring(0, 8) + '...' + token.substring(token.length - 8);
+        };
+
+        const copyToken = (token) => {
+            navigator.clipboard.writeText(token).then(() => {
+                ElementPlus.ElMessage.success('已复制到剪贴板');
+            }).catch(() => {
+                ElementPlus.ElMessage.error('复制失败');
+            });
+        };
+
+        const formatTime = (timestamp) => {
+            if(!timestamp) return '';
+            const d = new Date(timestamp * 1000);
+            return d.toLocaleString('zh-CN');
+        };
+
+        onMounted(() => {
+            loadTokens();
+        });
+
+        return {
+            loading,
+            creating,
+            dialogVisible,
+            tokens,
+            tokenForm,
+            showCreateDialog,
+            createToken,
+            deleteToken,
+            maskToken,
+            copyToken,
+            formatTime
+        };
+    }
+};
+
 // ==================== 路由配置 ====================
 const routes = [
     { path: '/', redirect: '/admin' },
-    { path: '/admin', component: Workspace }
+    { path: '/admin', component: Workspace },
+    { path: '/admin/settings', component: SiteSettings },
+    { path: '/admin/tokens', component: TokenManage }
 ];
 
 const router = createRouter({

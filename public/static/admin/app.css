@@ -88,10 +88,6 @@ html, body {
     padding: 8px 0;
 }
 
-.el-tree-node__content {
-    height: 32px;
-}
-
 .tree-node {
     flex: 1;
     display: flex;
@@ -99,6 +95,24 @@ html, body {
     justify-content: space-between;
     padding-right: 8px;
     font-size: 13px;
+}
+
+/* 拖拽状态样式 */
+.el-tree-node__content {
+    height: 32px;
+    cursor: grab;
+}
+
+.el-tree-node__content:active {
+    cursor: grabbing;
+}
+
+.el-tree-node.is-drop-inner > .el-tree-node__content {
+    background-color: #e6f0ff !important;
+}
+
+.el-tree-node.is-dragging > .el-tree-node__content {
+    opacity: 0.5;
 }
 
 .node-content {
@@ -261,6 +275,16 @@ html, body {
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s;
+}
+
+.note-item.sortable-ghost {
+    opacity: 0.4;
+    background: #e6f0ff;
+}
+
+.note-item.sortable-drag {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .note-item:hover {
@@ -525,6 +549,55 @@ html, body {
     overflow: hidden;
 }
 
+/* 反向链接面板 */
+.backlinks-panel {
+    border-top: 1px solid #e4e7ed;
+    background: #fafafa;
+    padding: 8px 12px;
+    max-height: 150px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.backlinks-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #606266;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.backlinks-header .el-icon {
+    font-size: 14px;
+    color: #409eff;
+}
+
+.backlinks-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.backlink-item {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fff;
+    border: 1px solid #e4e7ed;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #409eff;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.backlink-item:hover {
+    background: #e6f0ff;
+    border-color: #409eff;
+}
+
 #vditor {
     height: 100%;
 }
@@ -741,5 +814,267 @@ html, body {
     
     .editor-meta {
         padding: 6px 8px;
+    }
+}
+
+/* ==================== 站点设置页面 ==================== */
+.settings-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.settings-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e4e7ed;
+}
+
+.settings-header h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #303133;
+    margin: 0;
+}
+
+.settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.settings-form {
+    max-width: 600px;
+}
+
+.settings-form .el-form-item {
+    margin-bottom: 20px;
+}
+
+.form-tips {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 4px;
+}
+
+/* ==================== Token 管理页面 ==================== */
+.token-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.token-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e4e7ed;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.token-header h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #303133;
+    margin: 0;
+}
+
+.token-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.token-empty {
+    text-align: center;
+    padding: 60px 0;
+    color: #909399;
+    font-size: 14px;
+}
+
+.token-value {
+    font-family: monospace;
+    font-size: 12px;
+    color: #606266;
+    margin-right: 8px;
+}
+
+/* ==================== 底部导航按钮 ==================== */
+.tree-footer-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.tree-footer-actions .el-button {
+    padding: 4px;
+    color: #909399;
+}
+
+.tree-footer-actions .el-button:hover {
+    color: #409eff;
+    background: #f0f2f5;
+}
+
+/* ==================== 移动端响应式 ==================== */
+.mobile-header {
+    display: none;
+    align-items: center;
+    height: 48px;
+    padding: 0 12px;
+    background: #fff;
+    border-bottom: 1px solid #e4e7ed;
+    flex-shrink: 0;
+}
+
+.mobile-menu-btn {
+    padding: 8px;
+    font-size: 20px;
+    color: #606266;
+}
+
+.mobile-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #303133;
+    text-align: center;
+}
+
+.mobile-header-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+}
+
+.toggle-note-list {
+    position: absolute;
+    right: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: #fff;
+    border: 1px solid #e4e7ed;
+    border-radius: 0 4px 4px 0;
+    padding: 8px 4px !important;
+}
+
+/* 平板适配 */
+@media (max-width: 1024px) {
+    .workspace-aside {
+        width: 180px !important;
+    }
+
+    .note-list-aside {
+        width: 240px !important;
+    }
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+    .mobile-header {
+        display: flex;
+    }
+
+    .sidebar-overlay {
+        display: block;
+    }
+
+    .workspace-aside {
+        position: fixed;
+        left: -200px;
+        top: 0;
+        bottom: 0;
+        width: 200px !important;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        box-shadow: none;
+    }
+
+    .workspace-aside.sidebar-visible {
+        left: 0;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .note-list-aside {
+        position: relative;
+        width: 100% !important;
+        max-width: 280px;
+        transition: margin-left 0.3s ease;
+    }
+
+    .note-list-aside.note-list-hidden {
+        margin-left: -280px;
+    }
+
+    .note-list-aside .toggle-note-list {
+        right: -28px;
+    }
+
+    .workspace-main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tabs-actions .el-button span {
+        display: none;
+    }
+
+    .tabs-actions .el-button .el-icon {
+        margin: 0;
+    }
+
+    .editor-meta {
+        flex-wrap: wrap;
+    }
+
+    .editor-meta .meta-item {
+        min-width: 100%;
+    }
+
+    .editor-meta .meta-item .el-select,
+    .editor-meta .meta-item .el-input {
+        width: 100% !important;
+    }
+}
+
+/* 小屏手机 */
+@media (max-width: 480px) {
+    .note-list-aside {
+        max-width: 220px;
+    }
+
+    .note-list-aside.note-list-hidden {
+        margin-left: -220px;
+    }
+
+    .tabs-bar {
+        flex-wrap: wrap;
+    }
+
+    .tabs-bar .el-tabs {
+        width: 100%;
+    }
+
+    .tab-add-btn {
+        margin-left: auto;
+    }
+
+    .tabs-actions {
+        width: 100%;
+        justify-content: flex-end;
+        border-left: none;
+        border-top: 1px solid #e4e7ed;
+        padding: 4px 8px;
     }
 }

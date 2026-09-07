@@ -84,6 +84,24 @@ class Note extends Base
         }
     }
 
+    async sort() {
+        if(!this.$request.isPost()) return this.$error('请使用POST请求');
+
+        const items = this.$request.post('items', []);
+        if(!Array.isArray(items) || items.length === 0) {
+            return this.$error('参数错误');
+        }
+
+        try {
+            for(const item of items) {
+                await this.$db.table('note').where({id: item.id}).update({sort: item.sort});
+            }
+            this.$success('排序已保存');
+        } catch(e) {
+            this.$error('保存失败：' + e.message);
+        }
+    }
+
     async backlinks() {
         const id = this.$request.get('id', 0);
         if(!id) return this.$error('缺少id参数');

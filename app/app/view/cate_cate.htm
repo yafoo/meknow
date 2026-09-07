@@ -1,0 +1,32 @@
+{{extend './layout.htm'}}
+
+{{block 'main'}}
+<div class="page-cate">
+    <header class="cate-header">
+        <h1>{{cate.icon}} {{cate.name}}</h1>
+        <p class="cate-desc">共 {{notes.length}} 篇笔记</p>
+    </header>
+    
+    {{if notes.length > 0}}
+    <div class="note-list">
+        {{each notes note}}
+        <div class="note-item">
+            <h3><a href="/note/{{note.id}}.html">{{note.title}}</a></h3>
+            <div class="note-meta">
+                <span class="date">📅 {{dateFormat(note.add_time, 'Y-m-d H:i')}}</span>
+                {{if note.keywords}}
+                <span class="tags">
+                    🏷️ {{each note.keywords.split(',') tag}}<span class="tag">{{tag}}</span> {{/each}}
+                </span>
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{else}}
+    <div class="empty">
+        <p>该分类下暂无笔记</p>
+    </div>
+    {{/if}}
+</div>
+{{/block}}

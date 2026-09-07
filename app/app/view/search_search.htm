@@ -1,0 +1,40 @@
+{{extend './layout.htm'}}
+
+{{block 'main'}}
+<div class="page-search">
+    <header class="search-header">
+        <h2>搜索结果</h2>
+        {{if q}}
+        <p class="search-query">关键词: <strong>{{q}}</strong>，找到 {{notes.length}} 条结果</p>
+        {{/if}}
+    </header>
+    
+    {{if notes.length > 0}}
+    <div class="note-list">
+        {{each notes note}}
+        <article class="note-item">
+            <h3><a href="/note/{{note.id}}.html">{{note.title}}</a></h3>
+            <div class="note-meta">
+                {{if note.cate_name}}
+                <span class="cate">📁 {{note.cate_name}}</span>
+                {{/if}}
+                {{if note.keywords}}
+                <span class="tags">
+                    🏷️ {{each note.keywords.split(',') tag}}<span class="tag">{{tag}}</span> {{/each}}
+                </span>
+                {{/if}}
+            </div>
+        </article>
+        {{/each}}
+    </div>
+    {{else}}
+    <div class="empty">
+        {{if q}}
+        <p>没有找到相关笔记</p>
+        {{else}}
+        <p>请输入搜索关键词</p>
+        {{/if}}
+    </div>
+    {{/if}}
+</div>
+{{/block}}

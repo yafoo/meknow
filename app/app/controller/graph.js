@@ -9,9 +9,15 @@ class Graph extends Base
             .join('cate c', 'n.cate_id=c.id')
             .where({'c.is_public': 1})
             .select();
-        
-        const edges = await this.$db.table('note_link').select();
-        
+
+        const links = await this.$db.table('note_link').select();
+
+        // 转换 edges 格式为 vis-network 需要的 {from, to}
+        const edges = links.map(link => ({
+            from: link.source_id,
+            to: link.target_id
+        }));
+
         this.$assign('nodes', JSON.stringify(nodes));
         this.$assign('edges', JSON.stringify(edges));
         this.$assign('title', '知识图谱');

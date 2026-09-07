@@ -18,11 +18,9 @@
             {{/if}}
         </div>
     </header>
-    
-    <div class="note-content" id="content">
-        {{@note.content}}
-    </div>
-    
+
+    <div class="note-content vditor-reset" id="content"></div>
+
     {{if backlinks && backlinks.length > 0}}
     <div class="backlinks">
         <h3>反向链接</h3>
@@ -35,16 +33,20 @@
     {{/if}}
 </article>
 
-<script src="/static/common/vditor/dist/method.min.js"></script>
+<script id="note-content" type="text/plain">{{@note.content}}</script>
+<script src="/static/common/vditor/index.min.js"></script>
 <script>
     // 使用 Vditor 渲染 Markdown
-    const content = document.getElementById('content');
-    Vditor.mermaidRender(document);
-    VditorPreview.mermaidRender(document);
-    // const raw = content.textContent;
-    // Vditor.preview(content, raw, {
-    //     mode: 'light',
-    //     preview: { theme: { current: 'light' } }
-    // });
+    const contentEl = document.getElementById('content');
+    const rawContent = document.getElementById('note-content').textContent;
+
+    if (rawContent.trim()) {
+        Vditor.preview(contentEl, rawContent, {
+            mode: 'light',
+            hljs: { style: 'github' },
+            anchor: 1,
+            cdn: '/static/common/vditor'
+        });
+    }
 </script>
 {{/block}}

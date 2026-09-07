@@ -1,0 +1,133 @@
+{{extend './layout.htm'}}
+
+{{block 'head'}}
+<style>
+    .graph-container {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        padding: 20px;
+    }
+    
+    #graph-network {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
+    }
+    
+    .graph-legend {
+        margin-top: 16px;
+        display: flex;
+        gap: 20px;
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .legend-dot.node {
+        background: #409eff;
+    }
+    
+    .legend-dot.edge {
+        background: #909399;
+    }
+    
+    .graph-info {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #999;
+    }
+</style>
+{{/block}}
+
+{{block 'main'}}
+<div class="graph-container">
+    <div id="graph-network"></div>
+    <div class="graph-legend">
+        <div class="legend-item">
+            <span class="legend-dot node"></span>
+            <span>笔记节点</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-dot edge"></span>
+            <span>链接关系</span>
+        </div>
+    </div>
+    <div class="graph-info">
+        共 <strong>{{nodes.length}}</strong> 个笔记节点，<strong>{{edges.length}}</strong> 条链接关系。点击节点可跳转到笔记详情。
+    </div>
+</div>
+
+<script src="/static/common/vis-network/vis-network.min.js"></script>
+<script>
+    const nodesData = {{@nodes}};
+    const edgesData = {{@edges}};
+    
+    // 转换为 vis-network 格式
+    const nodes = new vis.DataSet(nodesData.map(n => ({
+        id: n.id,
+        label: n.title,
+        title: n.title,
+        color: {
+            background: '#409eff',
+            border: '#337ecc',
+            highlight: { background: '#66b1ff', border: '#409eff' }
+        },
+        font: { size: 14, color: '#333' },
+        shape: 'dot',
+        size: 20
+    })));
+    
+    const edges = new vis.DataSet(edgesData.map(e => ({
+        from: e.from,
+        to: e.to,
+        arrows: 'to',
+        color: { color: '#c0c4cc', highlight: '#409eff' }
+    })));
+    
+    const container = document.getElementById('graph-network');
+    const data = { nodes, edges };
+    const options = {
+        physics: {
+            enabled: true,
+            barnesHut: {
+                gravitationalConstant: -3000,
+                centralGravity: 0.3,
+                springLength: 150,
+                springConstant: 0.04,
+                damping: 0.09
+            }
+        },
+        interaction: {
+            hover: true,
+            tooltipDelay: 200
+        },
+        edges: {
+            width: 1,
+            smooth: { type: 'continuous' }
+        }
+    };
+    
+    const network = new vis.Network(container, data, options);
+    
+    // 点击节点跳转到笔记
+    network.on('doubleClick', function(params) {
+        if(params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            window.location.href = '/note/' + nodeId + '.html';
+        }
+    });
+</script>
+{{/block}}
