@@ -163,18 +163,30 @@ const store = reactive({
     },
     
     // 关闭 Tab
-    closeTab(id) {
+    async closeTab(id) {
         const index = this.tabs.findIndex(t => t.id === id);
         if(index === -1) return;
-        
+
         // 如果有修改，提示用户
         const tab = this.tabs[index];
         if(tab.modified) {
-            if(!confirm('笔记已修改，是否放弃保存？')) {
+            try {
+                await ElementPlus.ElMessageBox.confirm(
+                    '笔记已修改，是否放弃保存？',
+                    '未保存提示',
+                    {
+                        confirmButtonText: '放弃',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }
+                );
+                // 用户确认放弃，清除缓存
+                delete this.notesCache[id];
+            } catch(e) {
                 return;
             }
         }
-        
+
         this.tabs.splice(index, 1);
         
         // 如果关闭的是当前激活的 Tab
@@ -493,7 +505,7 @@ const CategoryTree = {
             dialogVisible.value = true;
         };
 
-        const handleCommand = (command, data) => {
+        const handleCommand = async(command, data) => {
             if(command === 'add') {
                 dialogTitle.value = '添加子分类';
                 cateForm.id = null;
@@ -511,15 +523,25 @@ const CategoryTree = {
                 cateForm.is_public = data.is_public === 1;
                 dialogVisible.value = true;
             } else if(command === 'delete') {
-                if(confirm(`确定删除分类「${data.name}」吗？`)) {
-                    api.deleteCate(data.id).then(res => {
-                        if(res.state === 1) {
-                            ElementPlus.ElMessage.success('删除成功');
-                            store.loadCategories();
-                        } else {
-                            ElementPlus.ElMessage.error(res.msg);
+                try {
+                    await ElementPlus.ElMessageBox.confirm(
+                        `确定删除分类「${data.name}」吗？`,
+                        '删除确认',
+                        {
+                            confirmButtonText: '确定删除',
+                            cancelButtonText: '取消',
+                            type: 'warning'
                         }
-                    });
+                    );
+                    const res = await api.deleteCate(data.id);
+                    if(res.state === 1) {
+                        ElementPlus.ElMessage.success('删除成功');
+                        store.loadCategories();
+                    } else {
+                        ElementPlus.ElMessage.error(res.msg);
+                    }
+                } catch(e) {
+                    // 用户取消
                 }
             }
         };
