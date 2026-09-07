@@ -1,0 +1,745 @@
+/* Meknow 管理后台紧凑风格样式 */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --el-font-size-base: 13px;
+    --el-color-primary: #409eff;
+}
+
+html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    color: #303133;
+    background: #f5f7fa;
+}
+
+#app {
+    height: 100%;
+}
+
+/* ==================== 布局 ==================== */
+.workspace {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.el-container {
+    height: 100%;
+}
+
+.workspace-aside {
+    background: #fff;
+    border-right: 1px solid #e4e7ed;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.workspace-content {
+    background: #fff;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==================== 侧栏 ==================== */
+.note-list-aside {
+    background: #fff;
+    border-right: 1px solid #e4e7ed;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.category-tree {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tree-header {
+    height: 42px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e4e7ed;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.tree-title {
+    color: #606266;
+}
+
+.el-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.el-tree-node__content {
+    height: 32px;
+}
+
+.tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 8px;
+    font-size: 13px;
+}
+
+.node-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.node-icon {
+    font-size: 14px;
+}
+
+.node-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.el-tree-node__content:hover .node-actions {
+    opacity: 1;
+}
+
+.node-actions .el-button {
+    padding: 2px;
+    height: auto;
+}
+
+.node-actions .el-button .el-icon {
+    font-size: 14px;
+    color: #909399;
+}
+
+.node-actions .el-button:hover .el-icon {
+    color: #409eff;
+}
+
+.action-icon {
+    font-size: 14px;
+    color: #909399;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+.action-icon:hover {
+    background: #f0f2f5;
+    color: #409eff;
+}
+
+.tree-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e4e7ed;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #606266;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.user-info:hover {
+    background: #f0f2f5;
+}
+
+.user-info .el-icon {
+    font-size: 14px;
+    color: #909399;
+    flex-shrink: 0;
+}
+
+.username {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-footer .el-button {
+    flex-shrink: 0;
+}
+
+/* ==================== 笔记列表 ==================== */
+.note-list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 1;
+}
+
+.note-list-header {
+    height: 42px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 1px solid #f0f2f5;
+    flex-shrink: 0;
+}
+
+.note-list-title {
+    color: #606266;
+}
+
+.note-list-count {
+    font-size: 11px;
+    color: #909399;
+    background: #f0f2f5;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 400;
+}
+
+.note-list-search {
+    padding: 8px 12px;
+}
+
+.note-list-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 6px 6px;
+}
+
+.note-list-empty {
+    text-align: center;
+    padding: 30px 0;
+    color: #c0c4cc;
+    font-size: 12px;
+}
+
+.note-item {
+    padding: 8px 10px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.note-item:hover {
+    background: #f0f2f5;
+}
+
+.note-item.active {
+    background: #e6f0ff;
+}
+
+.note-item.pinned {
+    background: #fff9e6;
+}
+
+.note-item.pinned:hover {
+    background: #fff4d9;
+}
+
+.note-item.pinned.active {
+    background: #e6f0ff;
+}
+
+.note-item-title {
+    font-size: 13px;
+    color: #303133;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+}
+
+.pin-icon {
+    font-size: 12px;
+    color: #e6a23c;
+    flex-shrink: 0;
+}
+
+.note-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.note-item-time {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: #c0c4cc;
+    margin-left: auto;
+}
+
+.note-item:hover .note-item-time {
+    display: none;
+}
+
+.note-item-actions {
+    display: none;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+}
+
+.note-item:hover .note-item-actions {
+    display: flex;
+}
+
+.note-item-actions .el-button {
+    padding: 2px;
+    height: auto;
+}
+
+.note-item-actions .el-button .el-icon {
+    font-size: 14px;
+    color: #909399;
+}
+
+.note-item-actions .el-button:hover .el-icon {
+    color: #f56c6c;
+}
+
+.note-item-actions .action-icon {
+    font-size: 14px;
+    color: #909399;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+.note-item-actions .action-icon:hover {
+    background: #f0f2f5;
+    color: #409eff;
+}
+
+.note-item-meta {
+    display: none;
+}
+
+/* ==================== Tabs ==================== */
+.tabs-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tabs-bar {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e4e7ed;
+    background: #f5f7fa;
+}
+
+.tabs-bar .el-tabs {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.tabs-bar .el-tabs__header {
+    margin: 0;
+    border-bottom: none;
+}
+
+.tabs-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 12px;
+    border-left: 1px solid #e4e7ed;
+}
+
+.tab-add-btn {
+    margin-left: 8px;
+    color: #909399;
+}
+
+.tab-add-btn:hover {
+    color: #409eff;
+}
+
+.el-tabs--card > .el-tabs__header {
+    margin: 0;
+    border-bottom: none;
+    background: transparent;
+}
+
+.el-tabs--card > .el-tabs__header .el-tabs__nav {
+    border: none;
+}
+
+.el-tabs--card > .el-tabs__header .el-tabs__item {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border: none;
+    border-right: 1px solid #e4e7ed;
+    background: #f5f7fa;
+    color: #606266;
+}
+
+.el-tabs--card > .el-tabs__header .el-tabs__item.is-active {
+    /* background: #fff; */
+    color: #409eff;
+}
+
+.el-tabs--card > .el-tabs__header .el-tabs__item:hover {
+    color: #409eff;
+}
+
+.el-tabs__nav-next,
+.el-tabs__nav-prev {
+    height: 32px;
+    line-height: 32px;
+}
+
+.tab-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.modified-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e6a23c;
+}
+
+.el-tabs__content {
+    flex: 1;
+    overflow: hidden;
+}
+
+.el-tab-pane {
+    height: 100%;
+}
+
+/* ==================== 笔记编辑器 ==================== */
+.note-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.editor-header {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e4e7ed;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: #303133;
+    background: transparent;
+}
+
+.title-input::placeholder {
+    color: #c0c4cc;
+}
+
+.editor-meta {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e4e7ed;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #fafafa;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.meta-item label {
+    font-size: 12px;
+    color: #909399;
+    white-space: nowrap;
+}
+
+.meta-item .el-select {
+    width: 160px;
+}
+
+.meta-item .el-input {
+    width: 200px;
+}
+
+.editor-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+#vditor {
+    height: 100%;
+}
+
+/* Vditor 样式调整 */
+.vditor {
+    border: none !important;
+}
+
+.vditor-toolbar {
+    border-bottom: 1px solid #e4e7ed !important;
+    background: #fafafa !important;
+    padding: 4px 8px !important;
+}
+
+/* 让编辑区域占满整个宽度 */
+.vditor-ir__editor,
+.vditor-wysiwyg__editor,
+.vditor-sv {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* ==================== 图标选择器 ==================== */
+.icon-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selected-icon {
+    font-size: 18px;
+}
+
+.icon-preview {
+    font-size: 24px;
+}
+
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.icon-item {
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+    box-sizing: border-box;
+}
+
+.icon-item:hover {
+    background: #f0f2f5;
+}
+
+.icon-item.active {
+    background: #e6f0ff;
+}
+
+/* ==================== 空状态 ==================== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.empty-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e4e7ed;
+}
+
+/* ==================== 空状态 ==================== */
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.el-empty {
+    padding: 40px 0;
+}
+
+.el-empty__description p {
+    font-size: 13px;
+    color: #909399;
+}
+
+/* ==================== Element Plus 紧凑模式 ==================== */
+.el-button {
+    padding: 5px 11px;
+    font-size: 12px;
+}
+
+.el-button--small {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.el-input__wrapper {
+    padding: 0 8px;
+}
+
+.el-input__inner {
+    height: 28px;
+    font-size: 12px;
+}
+
+.el-select .el-input__inner {
+    height: 28px;
+}
+
+.el-tag {
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+}
+
+.el-tag--small {
+    height: 18px;
+    padding: 0 4px;
+    font-size: 11px;
+}
+
+.el-dialog__header {
+    padding: 12px 16px;
+}
+
+.el-dialog__body {
+    padding: 16px;
+}
+
+.el-dialog__footer {
+    padding: 12px 16px;
+}
+
+.el-form-item {
+    margin-bottom: 12px;
+}
+
+.el-form-item__label {
+    font-size: 12px;
+}
+
+/* ==================== 滚动条 ==================== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c0c4cc;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #909399;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 768px) {
+    .workspace-aside {
+        width: 160px !important;
+    }
+
+    .note-list-aside {
+        width: 220px !important;
+    }
+    
+    .editor-meta {
+        flex-wrap: wrap;
+    }
+    
+    .meta-item .el-select,
+    .meta-item .el-input {
+        width: 100%;
+    }
+    
+    .title-input {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .workspace-aside {
+        width: 120px !important;
+    }
+
+    .note-list-aside {
+        width: 180px !important;
+    }
+    
+    .workspace-header {
+        padding: 0 8px;
+    }
+    
+    .editor-header {
+        padding: 6px 8px;
+    }
+    
+    .editor-meta {
+        padding: 6px 8px;
+    }
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - {{site.sitename}}</title>
+    <link rel="stylesheet" href="/static/app/style.css">
+    {{block 'head'}}{{/block}}
+</head>
+<body>
+    <div class="container">
+        <!-- 头部导航 -->
+        <header class="header">
+            <a href="/" class="logo">🧠 {{site.sitename}}</a>
+            <nav class="nav">
+                {{each cates cate}}
+                <a href="/cate/{{cate.id}}">{{cate.icon}} {{cate.name}}</a>
+                {{/each}}
+                <a href="/graph">图谱</a>
+            </nav>
+            <form class="search-form" action="/search">
+                <input type="text" name="q" placeholder="搜索...">
+                <button type="submit">🔍</button>
+            </form>
+        </header>
+        
+        <!-- 主内容 -->
+        <main class="main">
+            {{block 'main'}}{{/block}}
+        </main>
+        
+        <!-- 底部 -->
+        <footer class="footer">
+            <p>Powered by Meknow</p>
+        </footer>
+    </div>
+</body>
+</html>

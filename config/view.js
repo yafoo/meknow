@@ -1,0 +1,11 @@
+const dateFormat = require('jj.js').utils.date.format;
+
+const view = {
+    view_depr: '_', // 模版文件名分割符
+    view_filter: {
+        Date,
+        dateFormat: (value, format) => dateFormat(format, value)
+    }
+}
+
+module.exports = view;

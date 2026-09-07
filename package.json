@@ -1,0 +1,32 @@
+{
+  "name": "meknow",
+  "version": "1.0.0",
+  "description": "轻量级个人知识库系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "assets": "node scripts/copy-assets.js",
+    "setup": "npm install && npm run assets"
+  },
+  "keywords": [
+    "knowledge-base",
+    "notes",
+    "markdown"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "jj.js": "^1.1.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "element-plus": "^2.14.5",
+    "sortablejs": "^1.15.7",
+    "vditor": "^4.0.0",
+    "vis-network": "^9.1.13",
+    "vue": "^3.5.42",
+    "vue-router": "^4.6.4"
+  }
+}

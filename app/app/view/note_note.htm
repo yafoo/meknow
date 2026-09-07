@@ -1,0 +1,50 @@
+{{extend './layout.htm'}}
+
+{{block 'head'}}
+<link rel="stylesheet" href="/static/common/vditor/dist/index.css">
+{{/block}}
+
+{{block 'main'}}
+<article class="page-note">
+    <header class="note-header">
+        <h1>{{note.title}}</h1>
+        <div class="note-meta">
+            <span class="cate">📁 {{note.cate_name}}</span>
+            <span class="date">📅 {{dateFormat(note.add_time, 'Y-m-d H:i')}}</span>
+            {{if note.keywords}}
+            <span class="tags">
+                🏷️ {{each note.keywords.split(',') tag}}<span class="tag">{{tag}}</span> {{/each}}
+            </span>
+            {{/if}}
+        </div>
+    </header>
+    
+    <div class="note-content" id="content">
+        {{@note.content}}
+    </div>
+    
+    {{if backlinks && backlinks.length > 0}}
+    <div class="backlinks">
+        <h3>反向链接</h3>
+        <ul>
+            {{each backlinks link}}
+            <li><a href="/note/{{link.id}}.html">{{link.title}}</a></li>
+            {{/each}}
+        </ul>
+    </div>
+    {{/if}}
+</article>
+
+<script src="/static/common/vditor/dist/method.min.js"></script>
+<script>
+    // 使用 Vditor 渲染 Markdown
+    const content = document.getElementById('content');
+    Vditor.mermaidRender(document);
+    VditorPreview.mermaidRender(document);
+    // const raw = content.textContent;
+    // Vditor.preview(content, raw, {
+    //     mode: 'light',
+    //     preview: { theme: { current: 'light' } }
+    // });
+</script>
+{{/block}}
