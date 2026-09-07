@@ -239,8 +239,24 @@ html, body {
     flex-shrink: 0;
 }
 
+.note-list-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .note-list-title {
     color: #606266;
+}
+
+.toggle-note-list-btn {
+    display: none;
+    padding: 2px !important;
+    color: #909399;
+}
+
+.toggle-note-list-btn:hover {
+    color: #409eff;
 }
 
 .note-list-count {
@@ -709,10 +725,6 @@ html, body {
     font-size: 12px;
 }
 
-.el-input__wrapper {
-    padding: 0 8px;
-}
-
 .el-input__inner {
     height: 28px;
     font-size: 12px;
@@ -720,6 +732,10 @@ html, body {
 
 .el-select .el-input__inner {
     height: 28px;
+}
+
+.el-select--small .el-select__wrapper {
+    min-height: 30px;
 }
 
 .el-tag {
@@ -959,18 +975,6 @@ html, body {
     z-index: 999;
 }
 
-.toggle-note-list {
-    position: absolute;
-    right: -24px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    background: #fff;
-    border: 1px solid #e4e7ed;
-    border-radius: 0 4px 4px 0;
-    padding: 8px 4px !important;
-}
-
 /* 平板适配 */
 @media (max-width: 1024px) {
     .workspace-aside {
@@ -1019,8 +1023,8 @@ html, body {
         margin-left: -280px;
     }
 
-    .note-list-aside .toggle-note-list {
-        right: -28px;
+    .toggle-note-list-btn {
+        display: inline-flex !important;
     }
 
     .workspace-main {

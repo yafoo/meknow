@@ -45,6 +45,9 @@ const store = reactive({
     // 笔记数据缓存
     notesCache: {},
 
+    // 移动端：笔记列表是否隐藏
+    noteListHidden: false,
+
     // 初始化
     async init() {
         await this.loadUserInfo();
@@ -716,7 +719,12 @@ const NoteList = {
         <div class="note-list">
             <div class="note-list-header">
                 <span class="note-list-title">笔记</span>
-                <span class="note-list-count">{{ store.notesTotal }}</span>
+                <div class="note-list-header-actions">
+                    <span class="note-list-count">{{ store.notesTotal }}</span>
+                    <el-button size="small" text class="toggle-note-list-btn" @click="store.noteListHidden = !store.noteListHidden" title="收起笔记列表">
+                        <el-icon><DArrowLeft /></el-icon>
+                    </el-button>
+                </div>
             </div>
             <div class="note-list-search">
                 <el-input
@@ -1128,11 +1136,8 @@ const Workspace = {
                 <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': sidebarVisible }">
                     <CategoryTree />
                 </el-aside>
-                <el-aside width="280px" class="note-list-aside" :class="{ 'note-list-hidden': noteListHidden }">
+                <el-aside width="280px" class="note-list-aside" :class="{ 'note-list-hidden': store.noteListHidden }">
                     <NoteList />
-                    <el-button class="toggle-note-list" text @click="noteListHidden = !noteListHidden">
-                        <el-icon><ArrowRight v-if="noteListHidden" /><ArrowLeft v-else /></el-icon>
-                    </el-button>
                 </el-aside>
                 <el-container class="workspace-main">
                     <el-main class="workspace-content">
@@ -1188,7 +1193,6 @@ const Workspace = {
     `,
     setup() {
         const sidebarVisible = ref(false);
-        const noteListHidden = ref(false);
 
         const toggleSidebar = () => {
             sidebarVisible.value = !sidebarVisible.value;
@@ -1287,7 +1291,6 @@ const Workspace = {
         return {
             store,
             sidebarVisible,
-            noteListHidden,
             toggleSidebar,
             createNote,
             handleTabRemove,
