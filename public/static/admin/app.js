@@ -37,6 +37,10 @@ const store = reactive({
     tabs: [],
     activeTabId: null,
 
+    // 未保存提示弹窗（关闭 Tab 时）
+    unsavedDialogVisible: false,
+    unsavedTabId: null,
+
     // 笔记列表
     notes: [],
     notesTotal: 0,
@@ -241,32 +245,21 @@ const store = reactive({
     },
     
     // 关闭 Tab
-    async closeTab(id) {
+    // skipConfirm: 跳过未保存确认（内部复用：先保存再关闭）
+    async closeTab(id, skipConfirm = false) {
         const index = this.tabs.findIndex(t => t.id === id);
         if(index === -1) return;
 
         // 如果有修改，提示用户
         const tab = this.tabs[index];
-        if(tab.modified) {
-            try {
-                await ElementPlus.ElMessageBox.confirm(
-                    '笔记已修改，是否放弃保存？',
-                    '未保存提示',
-                    {
-                        confirmButtonText: '放弃',
-                        cancelButtonText: '取消',
-                        type: 'warning'
-                    }
-                );
-                // 用户确认放弃，清除缓存
-                delete this.notesCache[id];
-            } catch(e) {
-                return;
-            }
+        if(tab.modified && !skipConfirm) {
+            this.unsavedTabId = id;
+            this.unsavedDialogVisible = true;
+            return;
         }
 
         this.tabs.splice(index, 1);
-        
+
         // 如果关闭的是当前激活的 Tab
         if(this.activeTabId === id) {
             if(this.tabs.length > 0) {
@@ -277,6 +270,66 @@ const store = reactive({
                 // 移动端：最后一个 Tab 关闭后回到列表
                 this.backToList();
             }
+        }
+    },
+
+    // 取消关闭（留在当前页）
+    cancelUnsavedClose() {
+        this.unsavedDialogVisible = false;
+        this.unsavedTabId = null;
+    },
+
+    // 放弃修改并关闭
+    discardUnsavedClose() {
+        const id = this.unsavedTabId;
+        this.unsavedDialogVisible = false;
+        if(id === null) return;
+        this.unsavedTabId = null;
+        // 清掉缓存，下次打开重新拉服务端数据
+        delete this.notesCache[id];
+        this.closeTab(id, true);
+    },
+
+    // 保存修改并关闭（保存失败则留在当前页）
+    async saveUnsavedClose() {
+        const id = this.unsavedTabId;
+        if(id === null) return;
+        const note = this.notesCache[id];
+        if(!note) {
+            // 无缓存数据，只能放弃
+            this.discardUnsavedClose();
+            return;
+        }
+        if(!note.title) {
+            ElementPlus.ElMessage.warning('请输入标题');
+            return;
+        }
+        const noteData = {
+            id: note.id,
+            title: note.title,
+            cate_id: note.cate_id,
+            content: note.content,
+            keywords: note.keywords,
+            is_pinned: note.is_pinned
+        };
+        try {
+            const res = await api.updateNote(noteData);
+            if(res.state === 1) {
+                this.unsavedDialogVisible = false;
+                this.unsavedTabId = null;
+                const tab = this.tabs.find(t => t.id === id);
+                if(tab) {
+                    tab.title = note.title;
+                    tab.modified = false;
+                }
+                this.loadNotes(this.currentCateId);
+                ElementPlus.ElMessage.success('已保存并关闭');
+                this.closeTab(id, true);
+            } else {
+                ElementPlus.ElMessage.error(res.msg);
+            }
+        } catch(e) {
+            ElementPlus.ElMessage.error('保存失败，请重试');
         }
     },
     
@@ -297,6 +350,12 @@ const store = reactive({
     get currentNote() {
         if(!this.activeTabId) return null;
         return this.notesCache[this.activeTabId];
+    },
+
+    // 未保存弹窗展示的标题（取实时缓存值，编辑过也能正确显示）
+    get unsavedNoteTitle() {
+        if(this.unsavedTabId === null) return '';
+        return this.notesCache[this.unsavedTabId]?.title || '无标题';
     },
 
     // 当前分类名（移动端 header 展示用）
@@ -990,7 +1049,7 @@ const NoteList = {
                     const res = await api.deleteNote(note.id);
                     if(res.state === 1) {
                         ElementPlus.ElMessage.success('删除成功');
-                        store.closeTab(note.id);
+                        store.closeTab(note.id, true);
                         // 刷新列表
                         store.loadNotes(store.currentCateId, searchKeyword.value);
                     } else {
@@ -1013,7 +1072,7 @@ const NoteList = {
                 const res = await api.deleteNote(note.id);
                 if(res.state === 1) {
                     ElementPlus.ElMessage.success('删除成功');
-                    store.closeTab(note.id);
+                    store.closeTab(note.id, true);
                     // 刷新列表
                     store.loadNotes(store.currentCateId, searchKeyword.value);
                 } else {
@@ -1379,6 +1438,23 @@ const Workspace = {
                     </el-main>
                 </el-container>
             </el-container>
+
+            <!-- 未保存提示弹窗（关闭 Tab 时） -->
+            <el-dialog
+                v-model="store.unsavedDialogVisible"
+                title="未保存的修改"
+                width="360px"
+                append-to-body
+                :close-on-click-modal="false"
+                @close="store.unsavedTabId = null"
+            >
+                <div class="unsaved-tip">笔记「{{ store.unsavedNoteTitle }}」有未保存的修改，是否保存？</div>
+                <template #footer>
+                    <el-button @click="store.cancelUnsavedClose()">取消</el-button>
+                    <el-button @click="store.discardUnsavedClose()">放弃</el-button>
+                    <el-button type="primary" @click="store.saveUnsavedClose()">保存</el-button>
+                </template>
+            </el-dialog>
         </div>
     `,
     setup() {
@@ -1464,7 +1540,7 @@ const Workspace = {
                 if(res.state === 1) {
                     ElementPlus.ElMessage.success('删除成功');
                     const deletedId = store.currentNote.id;
-                    store.closeTab(deletedId);
+                    store.closeTab(deletedId, true);
                     store.loadNotes(store.currentCateId);
                 } else {
                     ElementPlus.ElMessage.error(res.msg);

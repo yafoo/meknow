@@ -34,6 +34,13 @@ html, body {
     height: 100%;
 }
 
+/* workspace 内 flex column 布局：el-container 填剩余空间 */
+.workspace > .el-container {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+}
+
 .workspace-aside {
     background: #fff;
     border-right: 1px solid #e4e7ed;
@@ -415,7 +422,8 @@ html, body {
 .tabs-container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
 .tabs-bar {
@@ -506,7 +514,8 @@ html, body {
 .note-editor {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
 .editor-header {
@@ -622,7 +631,8 @@ html, body {
 }
 
 #vditor {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Vditor 样式调整 */
@@ -1086,6 +1096,13 @@ html, body {
     --el-button-hover-text-color: #e6a23c;
     --el-button-hover-border-color: #e6a23c;
     --el-button-hover-bg-color: #fdf6ec;
+}
+
+/* 关闭 Tab 时的未保存提示弹窗 */
+.unsaved-tip {
+    line-height: 1.6;
+    word-break: break-all;
+    color: var(--el-text-color-primary);
 }
 
 .sidebar-overlay {
