@@ -254,6 +254,17 @@ html, body {
 
 .note-list-title {
     color: #606266;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 标题 + 统计数并排，长标题省略不挤掉统计 */
+.note-list-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
 
 .toggle-note-list-btn {
@@ -273,7 +284,9 @@ html, body {
     padding: 1px 6px;
     border-radius: 8px;
     font-weight: 400;
+    flex-shrink: 0;
 }
+
 
 .note-list-search {
     padding: 8px 12px;
@@ -492,6 +505,20 @@ html, body {
     display: flex;
     align-items: center;
     gap: 4px;
+    /* 允许内部标题收缩省略，否则长标题把 flex 项撑开 */
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* 限制单个 Tab 最大宽度，长标题省略号显示（el-tabs 无原生支持，CSS 实现） */
+.el-tabs--card > .el-tabs__header .el-tabs__item {
+    max-width: 180px;
+}
+
+.tab-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .modified-dot {
@@ -499,6 +526,12 @@ html, body {
     height: 6px;
     border-radius: 50%;
     background: #e6a23c;
+    flex-shrink: 0;
+}
+
+/* 关闭图标不被压缩 */
+.el-tabs__item .is-icon-close {
+    flex-shrink: 0;
 }
 
 .el-tabs__content {
@@ -1065,11 +1098,19 @@ html, body {
     font-weight: 500;
     color: #303133;
     text-align: center;
+    min-width: 0;
+    padding: 0 4px;
+    /* 文本与统计数并排；省略由内层 mobile-title-text 承担 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.mobile-title-text {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    min-width: 0;
-    padding: 0 4px;
 }
 
 .mobile-header-actions {
@@ -1371,7 +1412,7 @@ html, body {
         display: none !important;
     }
 
-    /* 笔记列表头部行隐藏：标题已在 mobile-header，统计在搜索行右侧 */
+    /* 笔记列表头部行隐藏：标题和统计数都在 mobile-header */
     .note-list-header {
         display: none;
     }

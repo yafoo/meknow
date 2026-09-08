@@ -851,7 +851,10 @@ const NoteList = {
     template: `
         <div class="note-list">
             <div class="note-list-header">
-                <span class="note-list-title">{{ store.currentCateName }}</span>
+                <div class="note-list-title-wrap">
+                    <span class="note-list-title">{{ store.currentCateName }}</span>
+                    <span class="note-list-count">{{ store.notesTotal }}</span>
+                </div>
                 <div class="note-list-header-actions">
                     <el-button size="small" text @click="createNote" title="新建笔记">
                         <el-icon><Plus /></el-icon>
@@ -874,7 +877,6 @@ const NoteList = {
                         <el-icon><Search /></el-icon>
                     </template>
                 </el-input>
-                <span class="note-list-count">{{ store.notesTotal }}</span>
             </div>
             <div class="note-list-body" ref="noteListBody" v-loading="store.notesLoading">
                 <div v-if="store.notes.length === 0 && !store.notesLoading" class="note-list-empty">
@@ -1371,7 +1373,10 @@ const Workspace = {
                 <el-button v-else text @click="store.mobileSidebarOpen ? store.closeSidebar() : store.openSidebar()" class="mobile-menu-btn">
                     <el-icon><Menu /></el-icon>
                 </el-button>
-                <span class="mobile-title">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : store.currentCateName }}</span>
+                <span class="mobile-title">
+                    <span class="mobile-title-text">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : store.currentCateName }}</span>
+                    <span v-if="store.mobileView !== 'editor'" class="note-list-count">{{ store.notesTotal }}</span>
+                </span>
                 <div class="mobile-header-actions">
                     <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" :text="store.activeTab && store.activeTab.modified ? false : true" :type="store.activeTab && store.activeTab.modified ? 'primary' : 'default'" @click="saveNote" class="mobile-save-btn" :title="store.activeTab && store.activeTab.modified ? '有未保存修改，点击保存' : '保存'" :icon="Check">
                     </el-button>
@@ -1410,7 +1415,7 @@ const Workspace = {
                                         <template #label>
                                             <span class="tab-label">
                                                 <span v-if="tab.modified" class="modified-dot"></span>
-                                                {{ tab.title }}
+                                                <span class="tab-title" :title="tab.title">{{ tab.title }}</span>
                                             </span>
                                         </template>
                                     </el-tab-pane>
