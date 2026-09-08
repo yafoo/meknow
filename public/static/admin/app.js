@@ -53,9 +53,35 @@ const store = reactive({
     mobileView: 'list',
     mobileSidebarOpen: false,
 
+    // 打开分类抽屉（移动端）
+    openSidebar() {
+        if(this.isMobile) {
+            if(!this.mobileSidebarOpen) {
+                this.mobileSidebarOpen = true;
+                history.pushState({ mekSidebar: true }, '');
+            }
+        } else {
+            this.mobileSidebarOpen = true;
+        }
+    },
+
+    // 关闭分类抽屉（移动端；consumeHistory=true 由返回手势触发，避免二次 back）
+    closeSidebar(consumeHistory = true) {
+        if(this.mobileSidebarOpen) {
+            this.mobileSidebarOpen = false;
+            if(this.isMobile && consumeHistory && history.state && history.state.mekSidebar) {
+                history.back();
+            }
+        }
+    },
+
     // 进入编辑器视图（移动端单栏模式）
+    // 同时压入一个历史记录，让安卓返回手势先回列表而不是退出页面
     enterEditor() {
         if(this.isMobile) {
+            if(this.mobileView !== 'editor') {
+                history.pushState({ mekEditor: true }, '');
+            }
             this.mobileView = 'editor';
         }
     },
@@ -64,6 +90,10 @@ const store = reactive({
     backToList() {
         if(this.isMobile) {
             this.mobileView = 'list';
+            // 若历史栈里有编辑器标记，回退消费掉它（返回手势触发时走 popstate 分支）
+            if(history.state && history.state.mekEditor) {
+                history.back();
+            }
         }
     },
 
@@ -82,6 +112,17 @@ const store = reactive({
     async init() {
         this.updateMobileState();
         window.addEventListener('resize', () => this.updateMobileState());
+
+        // 安卓返回手势拦截：优先关分类抽屉，其次回列表，不退出页面
+        window.addEventListener('popstate', () => {
+            if(!this.isMobile) return;
+            if(this.mobileSidebarOpen) {
+                this.mobileSidebarOpen = false;
+            } else if(this.mobileView === 'editor') {
+                this.mobileView = 'list';
+            }
+        });
+
         await this.loadUserInfo();
         await this.loadCategories();
         await this.loadNotes(this.currentCateId);
@@ -510,7 +551,7 @@ const CategoryTree = {
             }
             // 移动端：选择分类后收起抽屉
             if(store.isMobile) {
-                store.mobileSidebarOpen = false;
+                store.closeSidebar();
             }
         };
 
@@ -1137,14 +1178,37 @@ const NoteEditor = {
             return flat;
         });
 
+        // Vditor 工具栏：
+        // - PC 端不配置 = Vditor 官方默认全量工具栏
+        // - 移动端基于默认清单排除低频/遮挡项：emoji、语音(record)、更多(more)、缩进(outdent/indent)
+        const getToolbar = () => {
+            if(!store.isMobile) {
+                return undefined; // 默认工具栏
+            }
+            return [
+                'headings', 'bold', 'italic', 'strike', 'link', '|',
+                'list', 'ordered-list', 'check', '|',
+                'quote', 'line', 'code', 'inline-code', '|',
+                'insert-before', 'insert-after', 'upload', 'table', '|',
+                'undo', 'redo', '|',
+                'fullscreen', 'edit-mode'
+            ];
+        };
+
         const initVditor = () => {
             if(vditorInstance) {
                 vditorInstance.destroy();
             }
 
+            const toolbar = getToolbar();
+
             vditorInstance = new Vditor('vditor', {
                 height: '100%',
                 mode: 'wysiwyg',
+                ...(toolbar ? { toolbar } : {}),
+                toolbarConfig: {
+                    pin: true
+                },
                 placeholder: '开始写作...',
                 cache: { enable: false },
                 cdn: '/static/common/vditor',
@@ -1227,19 +1291,14 @@ const Workspace = {
                 <el-button v-if="store.mobileView === 'editor'" text @click="store.backToList()" class="mobile-back-btn">
                     <el-icon><ArrowLeft /></el-icon>
                 </el-button>
-                <el-button v-else text @click="store.mobileSidebarOpen = !store.mobileSidebarOpen" class="mobile-menu-btn">
+                <el-button v-else text @click="store.mobileSidebarOpen ? store.closeSidebar() : store.openSidebar()" class="mobile-menu-btn">
                     <el-icon><Menu /></el-icon>
                 </el-button>
                 <span class="mobile-title">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : store.currentCateName }}</span>
                 <div class="mobile-header-actions">
-                    <template v-if="store.mobileView === 'editor' && store.tabs.length > 0">
-                        <el-button text @click="deleteNote" class="mobile-delete-btn" title="删除笔记">
-                            <el-icon><Delete /></el-icon>
-                        </el-button>
-                        <el-button text @click="saveNote" class="mobile-save-btn" title="保存">
-                            <el-icon><Check /></el-icon>
-                        </el-button>
-                    </template>
+                    <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" text @click="saveNote" class="mobile-save-btn" :class="{ 'has-modified': store.activeTab && store.activeTab.modified }" :title="store.activeTab && store.activeTab.modified ? '有未保存修改，点击保存' : '保存'">
+                        <el-icon><Check /></el-icon>
+                    </el-button>
                     <el-button v-else text @click="createNote" class="mobile-add-btn" title="新建笔记">
                         <el-icon><Plus /></el-icon>
                     </el-button>
@@ -1247,7 +1306,7 @@ const Workspace = {
             </div>
 
             <!-- 遮罩层 -->
-            <div class="sidebar-overlay" v-if="store.mobileSidebarOpen" @click="store.mobileSidebarOpen = false"></div>
+            <div class="sidebar-overlay" v-if="store.mobileSidebarOpen" @click="store.closeSidebar()"></div>
 
             <el-container>
                 <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': store.mobileSidebarOpen }">
@@ -1284,8 +1343,8 @@ const Workspace = {
                                     <el-button size="small" @click="deleteNote" :disabled="!store.activeTabId">
                                         <el-icon><Delete /></el-icon> 删除
                                     </el-button>
-                                    <el-button size="small" type="primary" @click="saveNote" :disabled="!store.activeTabId">
-                                        <el-icon><Check /></el-icon> 保存
+                                    <el-button size="small" type="primary" plain @click="saveNote" :disabled="!store.activeTabId" :class="{ 'has-modified': store.activeTab && store.activeTab.modified }">
+                                        <el-icon><Check /></el-icon> 保存<span v-if="store.activeTab && store.activeTab.modified" class="modified-hint">●</span>
                                     </el-button>
                                 </div>
                             </div>
@@ -1498,7 +1557,7 @@ const TokenManage = {
                 </el-button>
                 <span class="page-header-title">API Token 管理</span>
                 <div class="page-header-actions">
-                    <el-button type="primary" size="small" @click="showCreateDialog">
+                    <el-button type="primary" size="small" text @click="showCreateDialog" title="创建 Token">
                         <el-icon><Plus /></el-icon>
                     </el-button>
                 </div>
@@ -1713,11 +1772,6 @@ const UserProfile = {
                         <el-button type="primary" @click="saveUser" :loading="saving">保存修改</el-button>
                     </el-form-item>
                 </el-form>
-                <div class="profile-logout">
-                    <el-button @click="logout" type="danger" plain>
-                        <el-icon><SwitchButton /></el-icon> 退出登录
-                    </el-button>
-                </div>
             </div>
         </div>
     `,
@@ -1777,29 +1831,11 @@ const UserProfile = {
             }
         };
 
-        const logout = async () => {
-            try {
-                await ElementPlus.ElMessageBox.confirm(
-                    '确定要退出登录吗？',
-                    '退出确认',
-                    {
-                        confirmButtonText: '确定退出',
-                        cancelButtonText: '取消',
-                        type: 'warning'
-                    }
-                );
-                window.location.href = '/admin/login?logout=1';
-            } catch(e) {
-                // 用户取消操作
-            }
-        };
-
         return {
             userForm,
             loading,
             saving,
-            saveUser,
-            logout
+            saveUser
         };
     }
 };

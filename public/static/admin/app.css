@@ -1012,6 +1012,30 @@ html, body {
     color: #606266;
 }
 
+/* 未保存提示：保存按钮高亮为主题色 */
+.mobile-save-btn.has-modified {
+    color: #e6a23c !important;
+}
+
+.mobile-save-btn.has-modified .el-icon,
+.mobile-save-btn.has-modified svg {
+    color: #e6a23c !important;
+}
+
+.tabs-actions .has-modified .modified-hint {
+    font-size: 10px;
+    margin-left: 2px;
+}
+
+/* 未保存时 PC 保存按钮（plain 主题）描边强调 */
+.tabs-actions .has-modified.el-button--primary.is-plain {
+    --el-button-text-color: #e6a23c;
+    --el-button-border-color: #e6a23c;
+    --el-button-hover-text-color: #e6a23c;
+    --el-button-hover-border-color: #e6a23c;
+    --el-button-hover-bg-color: #fdf6ec;
+}
+
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -1193,6 +1217,13 @@ html, body {
         display: none !important;
     }
 
+    /* 移动端隐藏工具按钮 tooltip（触屏无悬浮意义且易被遮挡裁切） */
+    .vditor-toolbar .vditor-tip,
+    .vditor-tooltipped::before,
+    .vditor-tooltipped::after {
+        display: none !important;
+    }
+
     .editor-meta {
         flex-wrap: wrap;
         padding: 8px;
@@ -1219,6 +1250,10 @@ html, body {
         display: none;
     }
 
+    .vditor-toolbar__item {
+        padding: 0 2px !important;
+    }
+
     /* 反向链接面板 */
     .backlinks-panel {
         max-height: 120px;
@@ -1234,12 +1269,6 @@ html, body {
     .el-message-box {
         width: 88vw !important;
         max-width: 88vw;
-    }
-
-    /* Element Plus 表单 label 不再固定宽度 */
-    .el-form:not(.settings-form) .el-form-item__label {
-        width: auto !important;
-        min-width: 56px;
     }
 
     /* 设置页 */
