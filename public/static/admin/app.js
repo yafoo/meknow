@@ -108,7 +108,7 @@ const store = reactive({
                 const tree = data.data || [];
                 // 在头部插入"全部笔记"虚拟节点
                 this.categories = [
-                    { id: null, name: '全部笔记', icon: '📋', is_virtual: true, children: [] },
+                    { id: null, name: '全部笔记', icon: '📁', is_virtual: true, children: [] },
                     ...tree
                 ];
             }
@@ -381,7 +381,7 @@ const CategoryTree = {
             </el-tree>
 
             <!-- 添加/编辑分类对话框 -->
-            <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
+            <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px" append-to-body>
                 <el-form :model="cateForm" label-width="80px">
                     <el-form-item label="图标">
                         <div class="icon-selector">
@@ -406,6 +406,16 @@ const CategoryTree = {
                             </el-popover>
                             <span class="icon-preview">{{ cateForm.icon || '📁' }}</span>
                         </div>
+                    </el-form-item>
+                    <el-form-item label="上级分类">
+                        <el-select v-model="cateForm.pid" placeholder="无（作为顶级分类）" clearable filterable>
+                            <el-option
+                                v-for="cate in selectableParents"
+                                :key="cate.id"
+                                :label="cate.name"
+                                :value="cate.id"
+                            />
+                        </el-select>
                     </el-form-item>
                     <el-form-item label="名称">
                         <el-input v-model="cateForm.name" placeholder="分类名称" />
@@ -456,6 +466,39 @@ const CategoryTree = {
             icon: '📁',
             name: '',
             is_public: false
+        });
+
+        // 上级分类可选项：排除自身及其后代（防循环引用）
+        const selectableParents = computed(() => {
+            const result = [{ id: 0, name: '无（顶级分类）' }];
+            if(!cateForm.id) {
+                // 新建：所有真实分类均可作上级
+                const walk = (items, prefix = '') => {
+                    for(const item of items) {
+                        if(item.is_virtual) continue;
+                        const label = prefix + (item.icon ? item.icon + ' ' : '') + item.name;
+                        result.push({ id: item.id, name: label });
+                        if(item.children?.length) walk(item.children, label + ' / ');
+                    }
+                };
+                walk(store.categories);
+            } else {
+                const walk = (items, prefix = '', skipBranch = false) => {
+                    for(const item of items) {
+                        if(item.is_virtual) continue;
+                        const isSelf = item.id === cateForm.id;
+                        const label = prefix + (item.icon ? item.icon + ' ' : '') + item.name;
+                        if(!isSelf && !skipBranch) {
+                            result.push({ id: item.id, name: label });
+                        }
+                        if(item.children?.length) {
+                            walk(item.children, label + ' / ', skipBranch || isSelf);
+                        }
+                    }
+                };
+                walk(store.categories);
+            }
+            return result;
         });
 
         const handleNodeClick = (data) => {
@@ -690,6 +733,7 @@ const CategoryTree = {
             dialogVisible,
             dialogTitle,
             cateForm,
+            selectableParents,
             emojiList,
             selectIcon,
             showAddDialog,
@@ -1010,7 +1054,7 @@ const NoteList = {
 // 笔记编辑器组件
 const NoteEditor = {
     template: `
-        <div class="note-editor" v-if="note">
+        <div class="note-editor" :class="{ 'meta-collapsed': store.isMobile && !metaExpanded }" v-if="note">
             <div class="editor-header">
                 <input
                     v-model="note.title"
@@ -1023,7 +1067,7 @@ const NoteEditor = {
                     size="small"
                     text
                     @click="metaExpanded = !metaExpanded"
-                    title="笔记属性"
+                    :title="metaExpanded ? '收起属性与工具栏' : '展开属性与工具栏'"
                 >
                     <el-icon><InfoFilled /></el-icon>
                 </el-button>
@@ -1188,9 +1232,14 @@ const Workspace = {
                 </el-button>
                 <span class="mobile-title">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : store.currentCateName }}</span>
                 <div class="mobile-header-actions">
-                    <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" text @click="saveNote" class="mobile-save-btn" title="保存">
-                        <el-icon><Check /></el-icon>
-                    </el-button>
+                    <template v-if="store.mobileView === 'editor' && store.tabs.length > 0">
+                        <el-button text @click="deleteNote" class="mobile-delete-btn" title="删除笔记">
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
+                        <el-button text @click="saveNote" class="mobile-save-btn" title="保存">
+                            <el-icon><Check /></el-icon>
+                        </el-button>
+                    </template>
                     <el-button v-else text @click="createNote" class="mobile-add-btn" title="新建笔记">
                         <el-icon><Plus /></el-icon>
                     </el-button>

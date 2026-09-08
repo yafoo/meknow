@@ -531,6 +531,13 @@ html, body {
     color: #c0c4cc;
 }
 
+/* 属性折叠按钮：仅移动端显示 */
+.mobile-meta-toggle {
+    display: none;
+    padding: 6px;
+    font-size: 18px;
+}
+
 .editor-meta {
     padding: 8px 12px;
     border-bottom: 1px solid #e4e7ed;
@@ -1161,21 +1168,9 @@ html, body {
         order: 1;
     }
 
+    /* 移动端：保存/删除由顶栏承担，tabs-actions 整体隐藏 */
     .tabs-actions {
-        order: 3;
-        width: 100%;
-        justify-content: flex-end;
-        border-left: none;
-        border-top: 1px solid #e4e7ed;
-        padding: 4px 8px;
-    }
-
-    .tabs-actions .el-button span {
         display: none;
-    }
-
-    .tabs-actions .el-button .el-icon {
-        margin: 0;
     }
 
     /* 编辑器属性面板 */
@@ -1188,9 +1183,14 @@ html, body {
         font-size: 15px;
     }
 
+    /* 属性折叠按钮：移动端显示 */
     .mobile-meta-toggle {
-        padding: 6px;
-        font-size: 18px;
+        display: inline-flex;
+    }
+
+    /* 折叠态：隐藏 Vditor 工具栏（点击 ℹ️ 展开） */
+    .note-editor.meta-collapsed .vditor-toolbar {
+        display: none !important;
     }
 
     .editor-meta {
