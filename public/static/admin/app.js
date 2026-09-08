@@ -256,6 +256,22 @@ const store = reactive({
     get currentNote() {
         if(!this.activeTabId) return null;
         return this.notesCache[this.activeTabId];
+    },
+
+    // 当前分类名（移动端 header 展示用）
+    get currentCateName() {
+        if(this.currentCateId === null || this.currentCateId === undefined) {
+            return '全部笔记';
+        }
+        let found = null;
+        const walk = (items) => {
+            for(const item of items) {
+                if(item.id === this.currentCateId) { found = item; return; }
+                if(item.children?.length) walk(item.children);
+            }
+        };
+        walk(this.categories);
+        return found ? (found.icon ? found.icon + ' ' + found.name : found.name) : '笔记';
     }
 });
 
@@ -321,7 +337,7 @@ const CategoryTree = {
         <div class="category-tree">
             <div class="tree-header">
                 <span class="tree-title">分类</span>
-                <el-button size="small" text @click="showAddDialog">
+                <el-button size="small" text class="tree-add-btn" @click="showAddDialog">
                     <el-icon><Plus /></el-icon>
                 </el-button>
             </div>
@@ -346,7 +362,7 @@ const CategoryTree = {
                             <el-tag v-if="data.is_public" size="small" type="success">公开</el-tag>
                         </span>
                         <span v-if="!data.is_virtual" class="node-actions" @click.stop>
-                            <el-button size="small" text @click="createNoteInCate(data.id)">
+                            <el-button size="small" text class="node-addnote-btn" @click="createNoteInCate(data.id)">
                                 <el-icon><Plus /></el-icon>
                             </el-button>
                             <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, data)">
@@ -405,7 +421,7 @@ const CategoryTree = {
             </el-dialog>
 
             <div class="tree-footer">
-                <div class="user-info" @click="showUserEdit">
+                <div class="user-info" @click="$router.push('/admin/profile')">
                     <el-icon><User /></el-icon>
                     <span class="username">{{ store.username || '未登录' }}</span>
                 </div>
@@ -421,37 +437,11 @@ const CategoryTree = {
                     </el-button>
                 </div>
             </div>
-
-            <!-- 用户编辑弹窗 -->
-            <el-dialog v-model="userEditVisible" title="编辑用户" width="360px">
-                <el-form :model="userForm" label-width="80px">
-                    <el-form-item label="用户名">
-                        <el-input v-model="userForm.username" placeholder="用户名" />
-                    </el-form-item>
-                    <el-form-item label="新密码">
-                        <el-input v-model="userForm.password" type="password" placeholder="留空则不修改" show-password />
-                    </el-form-item>
-                    <el-form-item label="确认密码">
-                        <el-input v-model="userForm.confirmPassword" type="password" placeholder="再次输入新密码" show-password />
-                    </el-form-item>
-                </el-form>
-                <template #footer>
-                    <el-button @click="userEditVisible = false">取消</el-button>
-                    <el-button type="primary" @click="saveUser">保存</el-button>
-                </template>
-            </el-dialog>
         </div>
     `,
     setup() {
         const dialogVisible = ref(false);
         const dialogTitle = ref('添加分类');
-
-        const userEditVisible = ref(false);
-        const userForm = reactive({
-            username: '',
-            password: '',
-            confirmPassword: ''
-        });
 
         // 常用emoji列表
         const emojiList = [
@@ -672,43 +662,6 @@ const CategoryTree = {
             }
         };
 
-        const showUserEdit = () => {
-            userForm.username = store.username || '';
-            userForm.password = '';
-            userForm.confirmPassword = '';
-            userEditVisible.value = true;
-        };
-
-        const saveUser = async () => {
-            if(!userForm.username) {
-                ElementPlus.ElMessage.warning('用户名不能为空');
-                return;
-            }
-
-            if(userForm.password) {
-                if(userForm.password !== userForm.confirmPassword) {
-                    ElementPlus.ElMessage.warning('两次输入的密码不一致');
-                    return;
-                }
-            }
-
-            const res = await request('/api/user/edit', {
-                method: 'POST',
-                body: {
-                    username: userForm.username,
-                    password: userForm.password || undefined
-                }
-            });
-
-            if(res.state === 1) {
-                ElementPlus.ElMessage.success('保存成功');
-                store.username = userForm.username;
-                userEditVisible.value = false;
-            } else {
-                ElementPlus.ElMessage.error(res.msg || '保存失败');
-            }
-        };
-
         const logout = async () => {
             try {
                 await ElementPlus.ElMessageBox.confirm(
@@ -744,10 +697,6 @@ const CategoryTree = {
             saveCate,
             createNote,
             createNoteInCate,
-            userEditVisible,
-            userForm,
-            showUserEdit,
-            saveUser,
             logout
         };
     }
@@ -766,7 +715,7 @@ const NoteList = {
                     </el-button>
                 </div>
             </div>
-            <div class="note-list-search">
+            <div class="note-list-search" :data-count="store.notesTotal + ' 篇'">
                 <el-input
                     v-model="searchKeyword"
                     placeholder="搜索笔记..."
@@ -796,7 +745,7 @@ const NoteList = {
                         <span class="note-item-name">{{ note.title || '无标题' }}</span>
                         <span class="note-item-time">{{ formatTime(note.update_time || note.add_time) }}</span>
                         <span class="note-item-actions" @click.stop>
-                            <el-button size="small" text @click="deleteNote(note)">
+                            <el-button size="small" text class="note-delete-btn" @click="deleteNote(note)">
                                 <el-icon><Delete /></el-icon>
                             </el-button>
                             <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, note)">
@@ -1206,14 +1155,19 @@ const Workspace = {
                 <el-button v-else text @click="store.mobileSidebarOpen = !store.mobileSidebarOpen" class="mobile-menu-btn">
                     <el-icon><Menu /></el-icon>
                 </el-button>
-                <span class="mobile-title">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : 'Meknow' }}</span>
+                <span class="mobile-title">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : store.currentCateName }}</span>
                 <div class="mobile-header-actions">
                     <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" text @click="saveNote" class="mobile-save-btn" title="保存">
                         <el-icon><Check /></el-icon>
                     </el-button>
-                    <el-button v-else text @click="$router.push('/admin/settings')">
-                        <el-icon><Setting /></el-icon>
-                    </el-button>
+                    <template v-else>
+                        <el-button text @click="createNote" class="mobile-add-btn" title="新建笔记">
+                            <el-icon><Plus /></el-icon>
+                        </el-button>
+                        <el-button text @click="$router.push('/admin/settings')" class="mobile-setting-btn" title="设置">
+                            <el-icon><Setting /></el-icon>
+                        </el-button>
+                    </template>
                 </div>
             </div>
 
@@ -1385,11 +1339,12 @@ const Workspace = {
 const SiteSettings = {
     template: `
         <div class="settings-page">
-            <div class="settings-header">
-                <el-button class="page-back-btn" text @click="$router.push('/admin')">
+            <div class="page-header">
+                <el-button class="page-header-back" text @click="$router.push('/admin')">
                     <el-icon><ArrowLeft /></el-icon>
                 </el-button>
-                <h2>站点设置</h2>
+                <span class="page-header-title">站点设置</span>
+                <div class="page-header-actions"></div>
             </div>
             <div class="settings-content" v-loading="loading">
                 <el-form label-width="100px" class="settings-form">
@@ -1465,16 +1420,16 @@ const SiteSettings = {
 const TokenManage = {
     template: `
         <div class="token-page">
-            <div class="token-header">
-                <div class="token-header-left">
-                    <el-button class="page-back-btn" text @click="$router.push('/admin')">
-                        <el-icon><ArrowLeft /></el-icon>
-                    </el-button>
-                    <h2>API Token 管理</h2>
-                </div>
-                <el-button type="primary" @click="showCreateDialog">
-                    <el-icon><Plus /></el-icon> 创建 Token
+            <div class="page-header">
+                <el-button class="page-header-back" text @click="$router.push('/admin')">
+                    <el-icon><ArrowLeft /></el-icon>
                 </el-button>
+                <span class="page-header-title">API Token 管理</span>
+                <div class="page-header-actions">
+                    <el-button type="primary" size="small" @click="showCreateDialog">
+                        <el-icon><Plus /></el-icon>
+                    </el-button>
+                </div>
             </div>
             <div class="token-list v-loading-parent" v-loading="loading">
                 <div class="table-scroll-wrapper">
@@ -1660,12 +1615,130 @@ const TokenManage = {
     }
 };
 
+// ==================== 账户信息页面 ====================
+const UserProfile = {
+    template: `
+        <div class="profile-page">
+            <div class="page-header">
+                <el-button class="page-header-back" text @click="$router.push('/admin')">
+                    <el-icon><ArrowLeft /></el-icon>
+                </el-button>
+                <span class="page-header-title">账户信息</span>
+                <div class="page-header-actions"></div>
+            </div>
+            <div class="profile-content" v-loading="loading">
+                <el-form :model="userForm" label-width="90px" class="profile-form">
+                    <el-form-item label="用户名">
+                        <el-input v-model="userForm.username" placeholder="用户名" />
+                    </el-form-item>
+                    <el-form-item label="新密码">
+                        <el-input v-model="userForm.password" type="password" placeholder="留空则不修改" show-password />
+                    </el-form-item>
+                    <el-form-item label="确认密码">
+                        <el-input v-model="userForm.confirmPassword" type="password" placeholder="再次输入新密码" show-password />
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="saveUser" :loading="saving">保存修改</el-button>
+                    </el-form-item>
+                </el-form>
+                <div class="profile-logout">
+                    <el-button @click="logout" type="danger" plain>
+                        <el-icon><SwitchButton /></el-icon> 退出登录
+                    </el-button>
+                </div>
+            </div>
+        </div>
+    `,
+    setup() {
+        const loading = ref(true);
+        const saving = ref(false);
+        const userForm = reactive({
+            username: '',
+            password: '',
+            confirmPassword: ''
+        });
+
+        onMounted(async () => {
+            try {
+                const data = await request('/api/user/info');
+                if(data.state === 1) {
+                    userForm.username = data.data.username || '';
+                }
+            } catch(e) {
+                console.error('加载用户信息失败', e);
+            } finally {
+                loading.value = false;
+            }
+        });
+
+        const saveUser = async () => {
+            if(!userForm.username) {
+                ElementPlus.ElMessage.warning('用户名不能为空');
+                return;
+            }
+
+            if(userForm.password && userForm.password !== userForm.confirmPassword) {
+                ElementPlus.ElMessage.warning('两次输入的密码不一致');
+                return;
+            }
+
+            saving.value = true;
+            try {
+                const res = await request('/api/user/edit', {
+                    method: 'POST',
+                    body: {
+                        username: userForm.username,
+                        password: userForm.password || undefined
+                    }
+                });
+
+                if(res.state === 1) {
+                    ElementPlus.ElMessage.success('保存成功');
+                    store.username = userForm.username;
+                } else {
+                    ElementPlus.ElMessage.error(res.msg || '保存失败');
+                }
+            } catch(e) {
+                ElementPlus.ElMessage.error('保存失败');
+            } finally {
+                saving.value = false;
+            }
+        };
+
+        const logout = async () => {
+            try {
+                await ElementPlus.ElMessageBox.confirm(
+                    '确定要退出登录吗？',
+                    '退出确认',
+                    {
+                        confirmButtonText: '确定退出',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }
+                );
+                window.location.href = '/admin/login?logout=1';
+            } catch(e) {
+                // 用户取消操作
+            }
+        };
+
+        return {
+            userForm,
+            loading,
+            saving,
+            saveUser,
+            logout
+        };
+    }
+};
+
 // ==================== 路由配置 ====================
 const routes = [
     { path: '/', redirect: '/admin' },
     { path: '/admin', component: Workspace },
     { path: '/admin/settings', component: SiteSettings },
-    { path: '/admin/tokens', component: TokenManage }
+    { path: '/admin/tokens', component: TokenManage },
+    { path: '/admin/profile', component: UserProfile }
 ];
 
 const router = createRouter({

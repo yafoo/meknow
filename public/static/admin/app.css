@@ -808,18 +808,6 @@ html, body {
     background: #fff;
 }
 
-.settings-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e4e7ed;
-}
-
-.settings-header h2 {
-    font-size: 18px;
-    font-weight: 500;
-    color: #303133;
-    margin: 0;
-}
-
 .settings-content {
     flex: 1;
     overflow-y: auto;
@@ -846,21 +834,6 @@ html, body {
     display: flex;
     flex-direction: column;
     background: #fff;
-}
-
-.token-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e4e7ed;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.token-header h2 {
-    font-size: 18px;
-    font-weight: 500;
-    color: #303133;
-    margin: 0;
 }
 
 .token-list {
@@ -899,20 +872,74 @@ html, body {
     background: #f0f2f5;
 }
 
-/* ==================== 页面返回按钮 ==================== */
-.page-back-btn {
-    padding: 6px;
-    color: #606266;
-    margin-right: 8px;
+/* ==================== 统一页面头部 ==================== */
+.page-header {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    padding: 0 12px;
+    background: #fff;
+    border-bottom: 1px solid #e4e7ed;
+    flex-shrink: 0;
+    gap: 4px;
 }
 
-.page-back-btn:hover {
+.page-header-back {
+    padding: 8px;
+    font-size: 18px;
+    color: #606266;
+    flex-shrink: 0;
+}
+
+.page-header-back:hover {
     color: #409eff;
 }
 
-.token-header-left {
+.page-header-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #303133;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.page-header-actions {
     display: flex;
     align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* ==================== 账户信息页面 ==================== */
+.profile-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.profile-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.profile-form {
+    max-width: 480px;
+}
+
+.profile-form .el-form-item {
+    margin-bottom: 20px;
+}
+
+.profile-logout {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f2f5;
+    max-width: 480px;
 }
 
 /* 表格横向滚动容器（手机端） */
@@ -1238,6 +1265,67 @@ html, body {
     /* Token 页 */
     .token-list {
         padding: 16px 12px;
+    }
+
+    /* 防误触：移动端隐藏行内小按钮（功能保留在 ··· 菜单中） */
+    .tree-header .tree-add-btn,
+    .node-actions .node-addnote-btn,
+    .note-item-actions .note-delete-btn {
+        display: none !important;
+    }
+
+    /* 笔记列表头部行隐藏，统计并入搜索行（顶部保持两行） */
+    .note-list-header {
+        display: none;
+    }
+
+    .note-list-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-bottom: 1px solid #f0f2f5;
+    }
+
+    .note-list-search .el-input {
+        flex: 1;
+    }
+
+    .note-list-search::after {
+        content: attr(data-count);
+        font-size: 11px;
+        color: #909399;
+        flex-shrink: 0;
+        padding: 0 4px 0 8px;
+    }
+
+    /* 统一 page-header：与 mobile-header 一致的高度与触摸目标 */
+    .page-header {
+        height: 48px;
+        padding: 0 8px;
+    }
+
+    .page-header-back {
+        padding: 10px;
+        font-size: 20px;
+    }
+
+    .page-header-title {
+        font-size: 16px;
+    }
+
+    .page-header-actions .el-button {
+        padding: 8px;
+        font-size: 18px;
+    }
+
+    .profile-content {
+        padding: 16px 12px;
+    }
+
+    .profile-form,
+    .profile-logout {
+        max-width: none;
     }
 
     /* 消息提示不超宽 */
