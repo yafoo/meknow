@@ -1037,11 +1037,15 @@ html, body {
 }
 
 .mobile-menu-btn,
-.mobile-back-btn,
-.mobile-save-btn {
+.mobile-back-btn {
     padding: 8px;
     font-size: 20px;
     color: #606266;
+    flex-shrink: 0;
+}
+.mobile-save-btn {
+    padding: 8px;
+    font-size: 20px;
     flex-shrink: 0;
 }
 
@@ -1067,22 +1071,12 @@ html, body {
 .mobile-header-actions .el-button {
     padding: 8px;
     font-size: 20px;
-    color: #606266;
-}
-
-/* 未保存提示：保存按钮高亮为主题色 */
-.mobile-save-btn.has-modified {
-    color: #e6a23c !important;
-}
-
-.mobile-save-btn.has-modified .el-icon,
-.mobile-save-btn.has-modified svg {
-    color: #e6a23c !important;
 }
 
 .tabs-actions .has-modified .modified-hint {
     font-size: 10px;
     margin-left: 2px;
+    color: #e6a23c;
 }
 
 /* 未保存时 PC 保存按钮（plain 主题）描边强调 */

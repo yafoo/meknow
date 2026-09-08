@@ -1213,6 +1213,24 @@ const NoteEditor = {
                 cache: { enable: false },
                 cdn: '/static/common/vditor',
                 lang: 'zh_CN',
+                upload: {
+                    url: '/api/upload/index',
+                    fieldName: 'file',
+                    maxFileSize: 10 * 1024 * 1024,
+                    accept: 'image/*, .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .zip, .rar, .7z',
+                    format: (files, responseText) => {
+                        const res = typeof responseText === 'string' ? JSON.parse(responseText) : responseText;
+                        if(res.state === 1 && res.data && res.data.url) {
+                            const succMap = {};
+                            succMap[res.data.filename || files[0].name] = res.data.url;
+                            return JSON.stringify({ code: 0, msg: '', data: { succMap, errFiles: [] } });
+                        }
+                        return JSON.stringify({ code: 1, msg: res.msg || '上传失败', data: { succMap: {}, errFiles: [files[0].name] } });
+                    },
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                },
                 after: () => {
                     if(note.value) {
                         vditorInstance.setValue(note.value.content || '');
@@ -1296,8 +1314,7 @@ const Workspace = {
                 </el-button>
                 <span class="mobile-title">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : store.currentCateName }}</span>
                 <div class="mobile-header-actions">
-                    <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" text @click="saveNote" class="mobile-save-btn" :class="{ 'has-modified': store.activeTab && store.activeTab.modified }" :title="store.activeTab && store.activeTab.modified ? '有未保存修改，点击保存' : '保存'">
-                        <el-icon><Check /></el-icon>
+                    <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" :text="store.activeTab && store.activeTab.modified ? false : true" :type="store.activeTab && store.activeTab.modified ? 'primary' : 'default'" @click="saveNote" class="mobile-save-btn" :title="store.activeTab && store.activeTab.modified ? '有未保存修改，点击保存' : '保存'" :icon="Check">
                     </el-button>
                     <el-button v-else text @click="createNote" class="mobile-add-btn" title="新建笔记">
                         <el-icon><Plus /></el-icon>
@@ -1343,7 +1360,7 @@ const Workspace = {
                                     <el-button size="small" @click="deleteNote" :disabled="!store.activeTabId">
                                         <el-icon><Delete /></el-icon> 删除
                                     </el-button>
-                                    <el-button size="small" type="primary" plain @click="saveNote" :disabled="!store.activeTabId" :class="{ 'has-modified': store.activeTab && store.activeTab.modified }">
+                                    <el-button size="small" type="primary" :plain="store.activeTab && store.activeTab.modified ? false : true" @click="saveNote" :disabled="!store.activeTabId" :class="{ 'has-modified': store.activeTab && store.activeTab.modified }">
                                         <el-icon><Check /></el-icon> 保存<span v-if="store.activeTab && store.activeTab.modified" class="modified-hint">●</span>
                                     </el-button>
                                 </div>
@@ -1365,6 +1382,8 @@ const Workspace = {
         </div>
     `,
     setup() {
+        const Check = ElementPlusIconsVue.Check;
+
         const createNote = async () => {
             // 不再检查分类，直接创建笔记
             const res = await api.createNote({
@@ -1457,6 +1476,7 @@ const Workspace = {
 
         return {
             store,
+            Check,
             createNote,
             handleTabRemove,
             saveNote,

@@ -1,49 +1,38 @@
 const Base = require('./base');
 const {join} = require('path');
-const {mkdir, writeFile} = require('fs').promises;
-const crypto = require('crypto');
 
 class Upload extends Base
 {
     async index() {
         if(!this.$request.isPost()) return this.$error('请使用POST请求');
 
-        const files = this.ctx.request.files;
-        if(!files || !files.file) return this.$error('请选择文件');
+        // 框架 $upload.save() 内部自动生成 YYYY/mmdd/ 子目录和 md5 文件名
+        const uploadDir = join(this.$config.app.static_dir, 'upload');
+        const result = await this.$upload.file('file').validate({size: 10 * 1024 * 1024}).save(uploadDir);
 
-        const file = files.file;
-        const now = new Date();
-        const year = now.getFullYear();
-        const monthDay = String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
-        
-        const uploadDir = join(this.$config.app.base_dir, 'public', 'upload', String(year), monthDay);
-        await mkdir(uploadDir, {recursive: true});
-        
-        const ext = file.originalFilename.split('.').pop();
-        const filename = crypto.randomBytes(8).toString('hex') + '.' + ext;
-        const filepath = join(uploadDir, filename);
-        
-        await writeFile(filepath, file.filepath);
+        if(typeof result === 'object') {
+            const relativePath = '/upload/' + result.savename;
 
-        const relativePath = '/upload/' + year + '/' + monthDay + '/' + filename;
-        
-        // 保存上传记录
-        const noteId = this.$request.post('note_id', 0);
-        const attachId = await this.$db.table('attach').insert({
-            note_id: noteId,
-            filename: file.originalFilename,
-            filepath: relativePath,
-            filesize: file.size,
-            filetype: ext,
-            add_time: Math.floor(Date.now() / 1000)
-        });
+            // 保存上传记录
+            const noteId = this.$request.post('note_id', 0);
+            const attachId = await this.$db.table('attach').insert({
+                note_id: noteId,
+                filename: result.name,
+                filepath: relativePath,
+                filesize: result.size,
+                filetype: result.extname,
+                add_time: Math.floor(Date.now() / 1000)
+            });
 
-        this.$success('上传成功', {
-            id: attachId,
-            url: relativePath,
-            filename: file.originalFilename,
-            filesize: file.size
-        });
+            this.$success('上传成功', {
+                id: attachId.insertId || attachId,
+                url: relativePath,
+                filename: result.name,
+                filesize: result.size
+            });
+        } else {
+            this.$error(this.$upload.getError());
+        }
     }
 }
 
