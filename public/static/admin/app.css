@@ -1166,12 +1166,16 @@ html, body {
     }
 
     /* 编辑器容器：列表视图时滑出，编辑器视图时占满 */
+    /* height:auto 必须显式覆盖 .el-container 的 height:100%——绝对定位下
+       top/bottom/height 过度约束时 bottom 失效，容器会比可视区高出 48px（顶栏高度），
+       导致编辑内容末尾一段永远滚不出来 */
     .workspace-main.mobile-editor-view {
         position: absolute;
         top: 48px;
         bottom: 0;
         left: 0;
         right: 0;
+        height: auto;
         z-index: 10;
         background: #fff;
     }
@@ -1189,6 +1193,7 @@ html, body {
         left: 100%;
         right: auto;
         width: 100%;
+        height: auto;
     }
 
     /* 触摸目标放大 */
