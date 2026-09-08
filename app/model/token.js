@@ -44,7 +44,7 @@ class Token extends Model
 {
     // 获取 token 列表
     async getTokenList(condition = {}, rows = 100) {
-        return await this.db.where(condition).order('add_time', 'desc').limit(rows).select();
+        return await this.db.where(condition).limit(rows).select();
     }
 
     // 保存 token（新增或更新）
