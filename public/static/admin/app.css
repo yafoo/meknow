@@ -861,6 +861,64 @@ html, body {
     margin-right: 8px;
 }
 
+/* Token 权限标签 */
+.token-perm-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.token-perm-tag {
+    margin-right: 2px;
+}
+
+/* Token 弹窗权限分组勾选 */
+.perm-groups {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.perm-group {
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    padding: 8px 10px;
+}
+
+.perm-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #606266;
+    font-weight: 500;
+}
+
+.perm-group-all {
+    height: auto;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.perm-group-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+}
+
+.perm-group-items .el-checkbox {
+    margin-right: 0;
+}
+
+.keep-expire-check {
+    height: auto;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #909399;
+}
+
 /* ==================== 底部导航按钮 ==================== */
 .tree-footer-actions {
     display: flex;

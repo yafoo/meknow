@@ -1548,6 +1548,28 @@ const SiteSettings = {
 };
 
 // ==================== Token 管理页面 ====================
+// 权限分组定义（与后端 app/model/token.js 保持一致）
+const TOKEN_PERM_GROUPS = [
+    {
+        name: '分类管理',
+        items: [
+            {key: 'cate_read',   label: '查看'},
+            {key: 'cate_create', label: '新增'},
+            {key: 'cate_edit',   label: '编辑'},
+            {key: 'cate_delete', label: '删除'},
+        ]
+    },
+    {
+        name: '笔记管理',
+        items: [
+            {key: 'note_read',   label: '查看'},
+            {key: 'note_create', label: '新增'},
+            {key: 'note_edit',   label: '编辑'},
+            {key: 'note_delete', label: '删除'},
+        ]
+    }
+];
+
 const TokenManage = {
     template: `
         <div class="token-page">
@@ -1557,7 +1579,7 @@ const TokenManage = {
                 </el-button>
                 <span class="page-header-title">API Token 管理</span>
                 <div class="page-header-actions">
-                    <el-button type="primary" size="small" text @click="showCreateDialog" title="创建 Token">
+                    <el-button size="small" text @click="showCreateDialog" title="创建 Token">
                         <el-icon><Plus /></el-icon>
                     </el-button>
                 </div>
@@ -1565,8 +1587,18 @@ const TokenManage = {
             <div class="token-list v-loading-parent" v-loading="loading">
                 <div class="table-scroll-wrapper">
                 <el-table :data="tokens" stripe>
-                    <el-table-column prop="name" label="名称" />
-                    <el-table-column prop="token" label="Token">
+                    <el-table-column prop="name" label="名称" min-width="100" />
+                    <el-table-column label="权限" min-width="200">
+                        <template #default="{ row }">
+                            <div class="token-perm-tags">
+                                <template v-for="group in permSummary(row)" :key="group.name">
+                                    <el-tag v-for="perm in group.items" :key="perm" size="small" :type="group.type" class="token-perm-tag">{{ perm }}</el-tag>
+                                </template>
+                                <el-tag v-if="permSummary(row).length === 0" size="small" type="danger">无权限</el-tag>
+                            </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="token" label="Token" min-width="180">
                         <template #default="{ row }">
                             <span class="token-value">{{ maskToken(row.token) }}</span>
                             <el-button size="small" text @click="copyToken(row.token)">
@@ -1574,14 +1606,15 @@ const TokenManage = {
                             </el-button>
                         </template>
                     </el-table-column>
-                    <el-table-column label="过期时间" width="180">
+                    <el-table-column label="过期时间" width="160">
                         <template #default="{ row }">
                             <span v-if="row.expire_time === 0">永不过期</span>
                             <span v-else>{{ formatTime(row.expire_time) }}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column label="操作" width="100">
+                    <el-table-column label="操作" width="120" fixed="right">
                         <template #default="{ row }">
+                            <el-button size="small" text @click="showEditDialog(row)">编辑</el-button>
                             <el-button size="small" type="danger" text @click="deleteToken(row)">删除</el-button>
                         </template>
                     </el-table-column>
@@ -1592,28 +1625,42 @@ const TokenManage = {
                 </div>
             </div>
 
-            <!-- 创建 Token 对话框 -->
-            <el-dialog v-model="dialogVisible" title="创建 Token" width="450px">
+            <!-- 创建/编辑 Token 对话框 -->
+            <el-dialog v-model="dialogVisible" :title="editingId ? '编辑 Token' : '创建 Token'" width="450px">
                 <el-form :model="tokenForm" label-width="80px">
                     <el-form-item label="名称">
                         <el-input v-model="tokenForm.name" placeholder="如：手机端API" />
                     </el-form-item>
                     <el-form-item label="过期时间">
-                        <el-select v-model="tokenForm.expire_type" style="width: 100%">
+                        <el-select v-model="tokenForm.expire_type" style="width: 100%" :disabled="!!editingId && keepExpire">
                             <el-option label="永不过期" value="0" />
                             <el-option label="30天" value="30" />
                             <el-option label="90天" value="90" />
                             <el-option label="1年" value="365" />
                             <el-option label="自定义" value="custom" />
                         </el-select>
+                        <el-checkbox v-model="keepExpire" v-if="!!editingId" class="keep-expire-check">保持原过期时间不变</el-checkbox>
                     </el-form-item>
-                    <el-form-item v-if="tokenForm.expire_type === 'custom'" label="自定义天数">
+                    <el-form-item v-if="tokenForm.expire_type === 'custom' && !(!!editingId && keepExpire)" label="自定义天数">
                         <el-input-number v-model="tokenForm.custom_days" :min="1" :max="3650" />
+                    </el-form-item>
+                    <el-form-item label="权限">
+                        <div class="perm-groups">
+                            <div v-for="group in TOKEN_PERM_GROUPS" :key="group.name" class="perm-group">
+                                <div class="perm-group-header">
+                                    <span>{{ group.name }}</span>
+                                    <el-checkbox v-model="groupAll[group.name]" @change="toggleGroup(group)" class="perm-group-all">全选</el-checkbox>
+                                </div>
+                                <el-checkbox-group v-model="tokenForm.permissions_arr" class="perm-group-items">
+                                    <el-checkbox v-for="item in group.items" :key="item.key" :value="item.key">{{ item.label }}</el-checkbox>
+                                </el-checkbox-group>
+                            </div>
+                        </div>
                     </el-form-item>
                 </el-form>
                 <template #footer>
                     <el-button @click="dialogVisible = false">取消</el-button>
-                    <el-button type="primary" @click="createToken" :loading="creating">创建</el-button>
+                    <el-button type="primary" @click="submitToken" :loading="creating">{{ editingId ? '保存' : '创建' }}</el-button>
                 </template>
             </el-dialog>
         </div>
@@ -1623,11 +1670,18 @@ const TokenManage = {
         const creating = ref(false);
         const dialogVisible = ref(false);
         const tokens = ref([]);
+        const editingId = ref(null);
+        const keepExpire = ref(true);
+
         const tokenForm = reactive({
             name: '',
             expire_type: '0',
-            custom_days: 30
+            custom_days: 30,
+            permissions_arr: []
         });
+
+        // 分组全选状态
+        const groupAll = reactive({});
 
         const loadTokens = async () => {
             loading.value = true;
@@ -1643,45 +1697,133 @@ const TokenManage = {
             }
         };
 
+        // 列表权限摘要：[{name, type, items:['查看','新增']}]
+        const permSummary = (row) => {
+            const result = [];
+            TOKEN_PERM_GROUPS.forEach(group => {
+                const items = [];
+                group.items.forEach(item => {
+                    if(row.permissions_arr && row.permissions_arr.includes(item.key)) {
+                        items.push(item.label);
+                    } else if(row.perm_groups) {
+                        // 后端返回的勾选态
+                        const g = row.perm_groups.find(pg => pg.name === group.name);
+                        const it = g && g.items.find(i => i.key === item.key);
+                        if(it && it.checked) items.push(item.label);
+                    }
+                });
+                if(items.length) {
+                    result.push({name: group.name, type: group.name === '分类管理' ? 'primary' : 'success', items});
+                }
+            });
+            return result;
+        };
+
+        const refreshGroupAll = () => {
+            TOKEN_PERM_GROUPS.forEach(group => {
+                groupAll[group.name] = group.items.every(item => tokenForm.permissions_arr.includes(item.key));
+            });
+        };
+
+        const toggleGroup = (group) => {
+            if(groupAll[group.name]) {
+                // 全选：加上缺失项
+                group.items.forEach(item => {
+                    if(!tokenForm.permissions_arr.includes(item.key)) {
+                        tokenForm.permissions_arr.push(item.key);
+                    }
+                });
+            } else {
+                // 取消全选：移除该组全部
+                const groupKeys = group.items.map(item => item.key);
+                tokenForm.permissions_arr = tokenForm.permissions_arr.filter(k => !groupKeys.includes(k));
+            }
+        };
+
+        // 监听权限勾选变化，同步全选框
+        watch(() => tokenForm.permissions_arr, refreshGroupAll, {deep: true});
+
         const showCreateDialog = () => {
+            editingId.value = null;
+            keepExpire.value = true;
             tokenForm.name = '';
             tokenForm.expire_type = '0';
             tokenForm.custom_days = 30;
+            tokenForm.permissions_arr = [];
+            refreshGroupAll();
             dialogVisible.value = true;
         };
 
-        const createToken = async () => {
+        const showEditDialog = (row) => {
+            editingId.value = row.id;
+            keepExpire.value = true;
+            tokenForm.name = row.name;
+
+            // 过期时间回显：0=永不过期，否则算剩余天数
+            if(row.expire_time === 0) {
+                tokenForm.expire_type = '0';
+            } else {
+                const remainDays = Math.ceil((row.expire_time * 1000 - Date.now()) / 86400000);
+                tokenForm.expire_type = remainDays > 0 ? String(remainDays) : '0';
+            }
+            tokenForm.custom_days = 30;
+
+            // 权限回显：优先后端 perm_groups 勾选态
+            tokenForm.permissions_arr = [];
+            if(row.perm_groups) {
+                row.perm_groups.forEach(g => g.items.forEach(item => {
+                    if(item.checked) tokenForm.permissions_arr.push(item.key);
+                }));
+            }
+            refreshGroupAll();
+            dialogVisible.value = true;
+        };
+
+        const submitToken = async () => {
             if(!tokenForm.name) {
                 ElementPlus.ElMessage.warning('请输入名称');
+                return;
+            }
+            if(tokenForm.permissions_arr.length === 0) {
+                ElementPlus.ElMessage.warning('请至少勾选一项权限');
                 return;
             }
 
             creating.value = true;
             try {
-                let expire_time = 0;
-                if(tokenForm.expire_type === 'custom') {
+                // 过期时间计算：编辑+保持原值 → 传 -1 让后端不动（后端按 0 处理会覆盖！改为不传字段由后端保留）
+                let expire_time;
+                if(editingId.value && keepExpire.value) {
+                    expire_time = undefined; // 不更新过期时间
+                } else if(tokenForm.expire_type === 'custom') {
                     expire_time = Math.floor(Date.now() / 1000) + tokenForm.custom_days * 86400;
                 } else if(tokenForm.expire_type !== '0') {
                     expire_time = Math.floor(Date.now() / 1000) + parseInt(tokenForm.expire_type) * 86400;
+                } else {
+                    expire_time = 0;
                 }
 
-                const res = await request('/api/token/create', {
+                const body = {
+                    name: tokenForm.name,
+                    permissions_arr: [...tokenForm.permissions_arr]
+                };
+                if(editingId.value) body.id = editingId.value;
+                if(expire_time !== undefined) body.expire_time = expire_time;
+
+                const res = await request(editingId.value ? '/api/token/edit' : '/api/token/create', {
                     method: 'POST',
-                    body: {
-                        name: tokenForm.name,
-                        expire_time: expire_time
-                    }
+                    body
                 });
 
                 if(res.state === 1) {
-                    ElementPlus.ElMessage.success('创建成功');
+                    ElementPlus.ElMessage.success(editingId.value ? '保存成功' : '创建成功');
                     dialogVisible.value = false;
                     loadTokens();
                 } else {
-                    ElementPlus.ElMessage.error(res.msg || '创建失败');
+                    ElementPlus.ElMessage.error(res.msg || '操作失败');
                 }
             } catch(e) {
-                ElementPlus.ElMessage.error('创建失败');
+                ElementPlus.ElMessage.error('操作失败');
             } finally {
                 creating.value = false;
             }
@@ -1731,13 +1873,20 @@ const TokenManage = {
         });
 
         return {
+            TOKEN_PERM_GROUPS,
             loading,
             creating,
             dialogVisible,
             tokens,
             tokenForm,
+            editingId,
+            keepExpire,
+            groupAll,
+            permSummary,
+            toggleGroup,
             showCreateDialog,
-            createToken,
+            showEditDialog,
+            submitToken,
             deleteToken,
             maskToken,
             copyToken,
