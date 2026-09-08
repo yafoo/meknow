@@ -789,49 +789,14 @@ html, body {
     background: transparent;
 }
 
-/* ==================== 响应式 ==================== */
-@media (max-width: 768px) {
+/* ==================== 响应式（桌面/平板宽度调整，手机端规则见文件末尾） ==================== */
+@media (max-width: 1024px) {
     .workspace-aside {
-        width: 160px !important;
-    }
-
-    .note-list-aside {
-        width: 220px !important;
-    }
-    
-    .editor-meta {
-        flex-wrap: wrap;
-    }
-    
-    .meta-item .el-select,
-    .meta-item .el-input {
-        width: 100%;
-    }
-    
-    .title-input {
-        font-size: 14px;
-    }
-}
-
-@media (max-width: 480px) {
-    .workspace-aside {
-        width: 120px !important;
-    }
-
-    .note-list-aside {
         width: 180px !important;
     }
-    
-    .workspace-header {
-        padding: 0 8px;
-    }
-    
-    .editor-header {
-        padding: 6px 8px;
-    }
-    
-    .editor-meta {
-        padding: 6px 8px;
+
+    .note-list-aside {
+        width: 240px !important;
     }
 }
 
@@ -934,21 +899,60 @@ html, body {
     background: #f0f2f5;
 }
 
+/* ==================== 页面返回按钮 ==================== */
+.page-back-btn {
+    padding: 6px;
+    color: #606266;
+    margin-right: 8px;
+}
+
+.page-back-btn:hover {
+    color: #409eff;
+}
+
+.token-header-left {
+    display: flex;
+    align-items: center;
+}
+
+/* 表格横向滚动容器（手机端） */
+.table-scroll-wrapper {
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .table-scroll-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ==================== 视口高度（移动端浏览器地址栏） ==================== */
+@supports (height: 100dvh) {
+    html, body, #app, .workspace, .el-container {
+        height: 100dvh;
+    }
+}
+
 /* ==================== 移动端响应式 ==================== */
 .mobile-header {
     display: none;
     align-items: center;
     height: 48px;
-    padding: 0 12px;
+    padding: 0 8px;
     background: #fff;
     border-bottom: 1px solid #e4e7ed;
     flex-shrink: 0;
+    gap: 4px;
 }
 
-.mobile-menu-btn {
+.mobile-menu-btn,
+.mobile-back-btn,
+.mobile-save-btn {
     padding: 8px;
     font-size: 20px;
     color: #606266;
+    flex-shrink: 0;
 }
 
 .mobile-title {
@@ -957,11 +961,23 @@ html, body {
     font-weight: 500;
     color: #303133;
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    padding: 0 4px;
 }
 
 .mobile-header-actions {
     display: flex;
     gap: 4px;
+    flex-shrink: 0;
+}
+
+.mobile-header-actions .el-button {
+    padding: 8px;
+    font-size: 20px;
+    color: #606266;
 }
 
 .sidebar-overlay {
@@ -975,18 +991,7 @@ html, body {
     z-index: 999;
 }
 
-/* 平板适配 */
-@media (max-width: 1024px) {
-    .workspace-aside {
-        width: 180px !important;
-    }
-
-    .note-list-aside {
-        width: 240px !important;
-    }
-}
-
-/* 手机端适配 */
+/* 手机端适配：单栏视图切换 */
 @media (max-width: 768px) {
     .mobile-header {
         display: flex;
@@ -996,40 +1001,152 @@ html, body {
         display: block;
     }
 
+    /* 分类抽屉 */
     .workspace-aside {
         position: fixed;
-        left: -200px;
+        left: 0;
         top: 0;
         bottom: 0;
-        width: 200px !important;
+        width: 78vw !important;
+        max-width: 300px;
         z-index: 1000;
-        transition: left 0.3s ease;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
         box-shadow: none;
     }
 
     .workspace-aside.sidebar-visible {
-        left: 0;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+        transform: translateX(0);
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
     }
 
+    /* 笔记列表：单栏模式下占满全宽，编辑器视图时整体滑出 */
     .note-list-aside {
-        position: relative;
+        position: absolute;
+        top: 48px;
+        bottom: 0;
+        left: 0;
+        right: 0;
         width: 100% !important;
-        max-width: 280px;
-        transition: margin-left 0.3s ease;
+        max-width: none;
+        margin-left: 0 !important;
+        z-index: 5;
+        background: #fff;
     }
 
-    .note-list-aside.note-list-hidden {
-        margin-left: -280px;
+    .note-list-aside.mobile-editor-behind {
+        transform: translateX(-30%);
+        opacity: 0.4;
+        pointer-events: none;
     }
 
-    .toggle-note-list-btn {
-        display: inline-flex !important;
+    /* 编辑器容器：列表视图时滑出，编辑器视图时占满 */
+    .workspace-main.mobile-editor-view {
+        position: absolute;
+        top: 48px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        background: #fff;
     }
 
-    .workspace-main {
-        flex: 1;
-        min-width: 0;
+    .workspace {
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 列表视图下，编辑器区域整体移出屏幕右侧 */
+    .workspace-main:not(.mobile-editor-view) {
+        position: absolute;
+        top: 48px;
+        bottom: 0;
+        left: 100%;
+        right: auto;
+        width: 100%;
+    }
+
+    /* 触摸目标放大 */
+    .el-tree-node__content {
+        height: 40px;
+    }
+
+    .tree-node {
+        font-size: 14px;
+    }
+
+    .node-actions {
+        opacity: 1;
+    }
+
+    .node-actions .el-button .el-icon,
+    .node-actions .action-icon {
+        font-size: 18px;
+    }
+
+    .el-tree-node__expand-icon {
+        font-size: 16px;
+    }
+
+    .tree-header,
+    .tree-footer {
+        height: 48px;
+        display: flex;
+        align-items: center;
+    }
+
+    .tree-header {
+        padding: 0 12px;
+    }
+
+    /* 笔记项操作常显 + 触摸目标 */
+    .note-item {
+        padding: 12px 10px;
+    }
+
+    .note-item-title {
+        font-size: 14px;
+    }
+
+    .note-item-time {
+        font-size: 11px;
+    }
+
+    .note-item-actions {
+        display: flex;
+        opacity: 1;
+    }
+
+    .note-item-actions .el-button .el-icon,
+    .note-item-actions .action-icon {
+        font-size: 18px;
+    }
+
+    .note-item:hover .note-item-time {
+        display: inline;
+    }
+
+    /* Tabs 单层展示 */
+    .tabs-bar {
+        flex-wrap: wrap;
+    }
+
+    .tabs-bar .el-tabs {
+        width: 100%;
+        order: 1;
+    }
+
+    .tab-add-btn {
+        order: 2;
+    }
+
+    .tabs-actions {
+        order: 3;
+        width: 100%;
+        justify-content: flex-end;
+        border-left: none;
+        border-top: 1px solid #e4e7ed;
+        padding: 4px 8px;
     }
 
     .tabs-actions .el-button span {
@@ -1040,8 +1157,25 @@ html, body {
         margin: 0;
     }
 
+    /* 编辑器属性面板 */
+    .editor-header {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+
+    .title-input {
+        font-size: 15px;
+    }
+
+    .mobile-meta-toggle {
+        padding: 6px;
+        font-size: 18px;
+    }
+
     .editor-meta {
         flex-wrap: wrap;
+        padding: 8px;
+        gap: 8px;
     }
 
     .editor-meta .meta-item {
@@ -1052,35 +1186,73 @@ html, body {
     .editor-meta .meta-item .el-input {
         width: 100% !important;
     }
+
+    /* Vditor 工具栏横向滚动 */
+    .vditor-toolbar {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .vditor-toolbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* 反向链接面板 */
+    .backlinks-panel {
+        max-height: 120px;
+    }
+
+    /* 弹窗适配：不超过视口宽度 */
+    .el-dialog {
+        width: 92vw !important;
+        max-width: 92vw;
+        margin: 8vh auto !important;
+    }
+
+    .el-message-box {
+        width: 88vw !important;
+        max-width: 88vw;
+    }
+
+    /* Element Plus 表单 label 不再固定宽度 */
+    .el-form:not(.settings-form) .el-form-item__label {
+        width: auto !important;
+        min-width: 56px;
+    }
+
+    /* 设置页 */
+    .settings-content {
+        padding: 16px 12px;
+    }
+
+    .settings-form {
+        max-width: none;
+    }
+
+    .settings-form .el-form-item__label {
+        width: auto !important;
+        text-align: left;
+    }
+
+    /* Token 页 */
+    .token-list {
+        padding: 16px 12px;
+    }
+
+    /* 消息提示不超宽 */
+    .el-message {
+        max-width: 88vw;
+    }
 }
 
-/* 小屏手机 */
+/* 小屏手机（全面屏） */
 @media (max-width: 480px) {
-    .note-list-aside {
-        max-width: 220px;
+    .mobile-title {
+        font-size: 15px;
     }
 
-    .note-list-aside.note-list-hidden {
-        margin-left: -220px;
-    }
-
-    .tabs-bar {
-        flex-wrap: wrap;
-    }
-
-    .tabs-bar .el-tabs {
-        width: 100%;
-    }
-
-    .tab-add-btn {
-        margin-left: auto;
-    }
-
-    .tabs-actions {
-        width: 100%;
-        justify-content: flex-end;
-        border-left: none;
-        border-top: 1px solid #e4e7ed;
-        padding: 4px 8px;
+    .el-dialog {
+        margin: 4vh auto !important;
     }
 }

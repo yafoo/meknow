@@ -48,8 +48,40 @@ const store = reactive({
     // 移动端：笔记列表是否隐藏
     noteListHidden: false,
 
+    // 移动端状态：是否手机、当前单栏视图（list=笔记列表 / editor=编辑器）、分类抽屉
+    isMobile: false,
+    mobileView: 'list',
+    mobileSidebarOpen: false,
+
+    // 进入编辑器视图（移动端单栏模式）
+    enterEditor() {
+        if(this.isMobile) {
+            this.mobileView = 'editor';
+        }
+    },
+
+    // 返回列表视图（移动端单栏模式）
+    backToList() {
+        if(this.isMobile) {
+            this.mobileView = 'list';
+        }
+    },
+
+    // 响应移动端状态变化（窗口尺寸切换）
+    updateMobileState() {
+        const wasMobile = this.isMobile;
+        this.isMobile = window.innerWidth <= 768;
+        if(wasMobile && !this.isMobile) {
+            // 切回桌面：重置单栏状态
+            this.mobileView = 'list';
+            this.mobileSidebarOpen = false;
+        }
+    },
+
     // 初始化
     async init() {
+        this.updateMobileState();
+        window.addEventListener('resize', () => this.updateMobileState());
         await this.loadUserInfo();
         await this.loadCategories();
         await this.loadNotes(this.currentCateId);
@@ -113,6 +145,7 @@ const store = reactive({
         const existing = this.tabs.find(t => t.id === id);
         if(existing) {
             this.activeTabId = id;
+            this.enterEditor();
             return;
         }
 
@@ -158,9 +191,10 @@ const store = reactive({
             title: note.title || '无标题',
             modified: false
         });
-        
+
         this.activeTabId = note.id;
-        
+        this.enterEditor();
+
         // 加载笔记数据
         this.loadNote(note.id);
     },
@@ -199,6 +233,8 @@ const store = reactive({
                 this.activeTabId = this.tabs[newIndex].id;
             } else {
                 this.activeTabId = null;
+                // 移动端：最后一个 Tab 关闭后回到列表
+                this.backToList();
             }
         }
     },
@@ -438,6 +474,10 @@ const CategoryTree = {
                 store.currentCateId = null;
             } else {
                 store.currentCateId = data.id;
+            }
+            // 移动端：选择分类后收起抽屉
+            if(store.isMobile) {
+                store.mobileSidebarOpen = false;
             }
         };
 
@@ -785,6 +825,15 @@ const NoteList = {
         const initSortable = () => {
             if(!noteListBody.value) return;
 
+            // 移动端禁用拖拽排序（避免滚动列表时误触）
+            if(store.isMobile) {
+                if(sortableInstance) {
+                    sortableInstance.destroy();
+                    sortableInstance = null;
+                }
+                return;
+            }
+
             // 销毁旧实例
             if(sortableInstance) {
                 sortableInstance.destroy();
@@ -959,6 +1008,13 @@ const NoteList = {
             });
         });
 
+        // 移动端状态切换时重新初始化/销毁拖拽
+        watch(() => store.isMobile, () => {
+            nextTick(() => {
+                initSortable();
+            });
+        });
+
         return {
             store,
             searchKeyword,
@@ -982,8 +1038,17 @@ const NoteEditor = {
                     placeholder="笔记标题"
                     @input="markModified"
                 />
+                <el-button
+                    class="mobile-meta-toggle"
+                    size="small"
+                    text
+                    @click="metaExpanded = !metaExpanded"
+                    title="笔记属性"
+                >
+                    <el-icon><InfoFilled /></el-icon>
+                </el-button>
             </div>
-            <div class="editor-meta">
+            <div class="editor-meta" v-show="!store.isMobile || metaExpanded">
                 <div class="meta-item">
                     <label>分类</label>
                     <el-select v-model="note.cate_id" size="small" placeholder="选择分类" @change="markModified" clearable>
@@ -1026,6 +1091,7 @@ const NoteEditor = {
     `,
     setup() {
         const vditor = ref(null);
+        const metaExpanded = ref(false);
         let vditorInstance = null;
 
         const note = computed(() => store.currentNote);
@@ -1087,7 +1153,21 @@ const NoteEditor = {
         });
 
         onMounted(() => {
-            initVditor();
+            // 编辑器容器在 v-if="note" 内，note 已就绪才初始化
+            if(note.value) {
+                initVditor();
+            }
+        });
+
+        // note 异步加载到达后再初始化 Vditor（容器此时才存在）
+        watch(note, (val) => {
+            if(val && !vditorInstance) {
+                nextTick(() => {
+                    if(!vditorInstance) {
+                        initVditor();
+                    }
+                });
+            }
         });
 
         const backlinks = computed(() => {
@@ -1102,11 +1182,13 @@ const NoteEditor = {
         };
 
         return {
+            store,
             note,
             flatCategories,
             backlinks,
             openBacklink,
-            markModified
+            markModified,
+            metaExpanded
         };
     }
 };
@@ -1118,28 +1200,34 @@ const Workspace = {
         <div class="workspace">
             <!-- 移动端顶栏 -->
             <div class="mobile-header">
-                <el-button text @click="toggleSidebar" class="mobile-menu-btn">
+                <el-button v-if="store.mobileView === 'editor'" text @click="store.backToList()" class="mobile-back-btn">
+                    <el-icon><ArrowLeft /></el-icon>
+                </el-button>
+                <el-button v-else text @click="store.mobileSidebarOpen = !store.mobileSidebarOpen" class="mobile-menu-btn">
                     <el-icon><Menu /></el-icon>
                 </el-button>
-                <span class="mobile-title">Meknow</span>
+                <span class="mobile-title">{{ store.mobileView === 'editor' ? (store.activeTab ? store.activeTab.title : '编辑笔记') : 'Meknow' }}</span>
                 <div class="mobile-header-actions">
-                    <el-button text @click="$router.push('/admin/settings')">
+                    <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" text @click="saveNote" class="mobile-save-btn" title="保存">
+                        <el-icon><Check /></el-icon>
+                    </el-button>
+                    <el-button v-else text @click="$router.push('/admin/settings')">
                         <el-icon><Setting /></el-icon>
                     </el-button>
                 </div>
             </div>
 
             <!-- 遮罩层 -->
-            <div class="sidebar-overlay" v-if="sidebarVisible" @click="sidebarVisible = false"></div>
+            <div class="sidebar-overlay" v-if="store.mobileSidebarOpen" @click="store.mobileSidebarOpen = false"></div>
 
             <el-container>
-                <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': sidebarVisible }">
+                <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': store.mobileSidebarOpen }">
                     <CategoryTree />
                 </el-aside>
-                <el-aside width="280px" class="note-list-aside" :class="{ 'note-list-hidden': store.noteListHidden }">
+                <el-aside width="280px" class="note-list-aside" :class="{ 'note-list-hidden': store.noteListHidden, 'mobile-list-view': store.isMobile && store.mobileView === 'list', 'mobile-editor-behind': store.isMobile && store.mobileView === 'editor' }">
                     <NoteList />
                 </el-aside>
-                <el-container class="workspace-main">
+                <el-container class="workspace-main" :class="{ 'mobile-editor-view': store.isMobile && store.mobileView === 'editor' }">
                     <el-main class="workspace-content">
                         <div class="tabs-container" v-if="store.tabs.length > 0">
                             <div class="tabs-bar">
@@ -1192,12 +1280,6 @@ const Workspace = {
         </div>
     `,
     setup() {
-        const sidebarVisible = ref(false);
-
-        const toggleSidebar = () => {
-            sidebarVisible.value = !sidebarVisible.value;
-        };
-
         const createNote = async () => {
             // 不再检查分类，直接创建笔记
             const res = await api.createNote({
@@ -1290,8 +1372,6 @@ const Workspace = {
 
         return {
             store,
-            sidebarVisible,
-            toggleSidebar,
             createNote,
             handleTabRemove,
             saveNote,
@@ -1306,6 +1386,9 @@ const SiteSettings = {
     template: `
         <div class="settings-page">
             <div class="settings-header">
+                <el-button class="page-back-btn" text @click="$router.push('/admin')">
+                    <el-icon><ArrowLeft /></el-icon>
+                </el-button>
                 <h2>站点设置</h2>
             </div>
             <div class="settings-content" v-loading="loading">
@@ -1383,12 +1466,18 @@ const TokenManage = {
     template: `
         <div class="token-page">
             <div class="token-header">
-                <h2>API Token 管理</h2>
+                <div class="token-header-left">
+                    <el-button class="page-back-btn" text @click="$router.push('/admin')">
+                        <el-icon><ArrowLeft /></el-icon>
+                    </el-button>
+                    <h2>API Token 管理</h2>
+                </div>
                 <el-button type="primary" @click="showCreateDialog">
                     <el-icon><Plus /></el-icon> 创建 Token
                 </el-button>
             </div>
-            <div class="token-list" v-loading="loading">
+            <div class="token-list v-loading-parent" v-loading="loading">
+                <div class="table-scroll-wrapper">
                 <el-table :data="tokens" stripe>
                     <el-table-column prop="name" label="名称" />
                     <el-table-column prop="token" label="Token">
@@ -1411,6 +1500,7 @@ const TokenManage = {
                         </template>
                     </el-table-column>
                 </el-table>
+                </div>
                 <div v-if="tokens.length === 0 && !loading" class="token-empty">
                     暂无 Token，点击上方按钮创建
                 </div>
