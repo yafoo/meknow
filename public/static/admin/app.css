@@ -270,6 +270,13 @@ html, body {
 
 .note-list-search {
     padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.note-list-search .el-input {
+    flex: 1;
 }
 
 .note-list-body {
@@ -435,15 +442,6 @@ html, body {
     gap: 8px;
     padding: 0 12px;
     border-left: 1px solid #e4e7ed;
-}
-
-.tab-add-btn {
-    margin-left: 8px;
-    color: #909399;
-}
-
-.tab-add-btn:hover {
-    color: #409eff;
 }
 
 .el-tabs--card > .el-tabs__header {
@@ -1163,10 +1161,6 @@ html, body {
         order: 1;
     }
 
-    .tab-add-btn {
-        order: 2;
-    }
-
     .tabs-actions {
         order: 3;
         width: 100%;
@@ -1267,36 +1261,21 @@ html, body {
         padding: 16px 12px;
     }
 
-    /* 防误触：移动端隐藏行内小按钮（功能保留在 ··· 菜单中） */
-    .tree-header .tree-add-btn,
+    /* 防误触：移动端隐藏行内小按钮（功能保留在 ··· 菜单中；
+       tree-add-btn 为添加顶级分类，保留可见） */
     .node-actions .node-addnote-btn,
     .note-item-actions .note-delete-btn {
         display: none !important;
     }
 
-    /* 笔记列表头部行隐藏，统计并入搜索行（顶部保持两行） */
+    /* 笔记列表头部行隐藏：标题已在 mobile-header，统计在搜索行右侧 */
     .note-list-header {
         display: none;
     }
 
     .note-list-search {
-        display: flex;
-        align-items: center;
-        gap: 8px;
         padding: 8px 12px;
         border-bottom: 1px solid #f0f2f5;
-    }
-
-    .note-list-search .el-input {
-        flex: 1;
-    }
-
-    .note-list-search::after {
-        content: attr(data-count);
-        font-size: 11px;
-        color: #909399;
-        flex-shrink: 0;
-        padding: 0 4px 0 8px;
     }
 
     /* 统一 page-header：与 mobile-header 一致的高度与触摸目标 */

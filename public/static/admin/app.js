@@ -707,15 +707,17 @@ const NoteList = {
     template: `
         <div class="note-list">
             <div class="note-list-header">
-                <span class="note-list-title">笔记</span>
+                <span class="note-list-title">{{ store.currentCateName }}</span>
                 <div class="note-list-header-actions">
-                    <span class="note-list-count">{{ store.notesTotal }}</span>
+                    <el-button size="small" text @click="createNote" title="新建笔记">
+                        <el-icon><Plus /></el-icon>
+                    </el-button>
                     <el-button size="small" text class="toggle-note-list-btn" @click="store.noteListHidden = !store.noteListHidden" title="收起笔记列表">
                         <el-icon><DArrowLeft /></el-icon>
                     </el-button>
                 </div>
             </div>
-            <div class="note-list-search" :data-count="store.notesTotal + ' 篇'">
+            <div class="note-list-search">
                 <el-input
                     v-model="searchKeyword"
                     placeholder="搜索笔记..."
@@ -728,6 +730,7 @@ const NoteList = {
                         <el-icon><Search /></el-icon>
                     </template>
                 </el-input>
+                <span class="note-list-count">{{ store.notesTotal }}</span>
             </div>
             <div class="note-list-body" ref="noteListBody" v-loading="store.notesLoading">
                 <div v-if="store.notes.length === 0 && !store.notesLoading" class="note-list-empty">
@@ -936,6 +939,33 @@ const NoteList = {
             }
         };
 
+        // 新建笔记（列表头部加号）
+        const createNote = async () => {
+            const res = await api.createNote({
+                title: '无标题笔记',
+                cate_id: store.currentCateId || null,
+                content: ''
+            });
+
+            if(res.state === 1) {
+                const newNote = {
+                    id: res.data.id,
+                    title: '无标题笔记',
+                    cate_id: store.currentCateId || null,
+                    content: '',
+                    keywords: '',
+                    is_pinned: 0
+                };
+
+                store.notesCache[newNote.id] = newNote;
+                store.addTab(newNote);
+                store.loadNotes(store.currentCateId);
+                ElementPlus.ElMessage.success('笔记已创建');
+            } else {
+                ElementPlus.ElMessage.error(res.msg);
+            }
+        };
+
         // 监听分类切换，重新加载笔记
         watch(() => store.currentCateId, (newVal) => {
             store.loadNotes(newVal, searchKeyword.value);
@@ -971,7 +1001,8 @@ const NoteList = {
             onSearch,
             formatTime,
             handleCommand,
-            deleteNote
+            deleteNote,
+            createNote
         };
     }
 };
@@ -1160,14 +1191,9 @@ const Workspace = {
                     <el-button v-if="store.mobileView === 'editor' && store.tabs.length > 0" text @click="saveNote" class="mobile-save-btn" title="保存">
                         <el-icon><Check /></el-icon>
                     </el-button>
-                    <template v-else>
-                        <el-button text @click="createNote" class="mobile-add-btn" title="新建笔记">
-                            <el-icon><Plus /></el-icon>
-                        </el-button>
-                        <el-button text @click="$router.push('/admin/settings')" class="mobile-setting-btn" title="设置">
-                            <el-icon><Setting /></el-icon>
-                        </el-button>
-                    </template>
+                    <el-button v-else text @click="createNote" class="mobile-add-btn" title="新建笔记">
+                        <el-icon><Plus /></el-icon>
+                    </el-button>
                 </div>
             </div>
 
@@ -1205,9 +1231,6 @@ const Workspace = {
                                         </template>
                                     </el-tab-pane>
                                 </el-tabs>
-                                <el-button size="small" text @click="createNote" class="tab-add-btn">
-                                    <el-icon><Plus /></el-icon>
-                                </el-button>
                                 <div class="tabs-actions">
                                     <el-button size="small" @click="deleteNote" :disabled="!store.activeTabId">
                                         <el-icon><Delete /></el-icon> 删除
