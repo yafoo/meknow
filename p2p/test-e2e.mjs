@@ -1,82 +1,88 @@
 /**
- * 端到端测试：启动 p2p 适配层（子进程），从另一节点走 QUIC fetch 打 Meknow。
- * 验证：白名单放行、HTTP 转发、HTML 返回。
+ * 端到端测试（duplex 流模式，与 Android IrohProxy 完全一致的路径）：
+ *   dial 服务器节点 → 双向流 → 写手写 HTTP/1.1 → 读响应。
  *
- * 客户端密钥持久化在 data/test-client-key.bin（节点 ID 稳定），
- * 首次跑完需 node pair.js --add <client ID> 配对，之后可反复验证。
+ * 客户端密钥持久化 data/test-client-key.bin（节点 ID 稳定），
+ * 首次跑 403 后按提示 pair.js --add 配对，之后可反复验证。
  */
-import { spawn } from 'node:child_process';
+import pkg from '@momics/iroh-http-node';
+const { createNode } = pkg;
+import native from '@momics/iroh-http-node/index.js';
+const { generateSecretKey } = native;
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import pkg from '@momics/iroh-http-node';
-import native from '@momics/iroh-http-node/index.js';
-
-const { createNode } = pkg;
-const { generateSecretKey } = native;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const KEY_FILE = resolve(__dirname, 'data', 'test-client-key.bin');
+const ALPN = 'iroh-http/2-duplex';
 
 mkdirSync(dirname(KEY_FILE), { recursive: true });
-let clientKey;
-if(existsSync(KEY_FILE)) {
-    clientKey = new Uint8Array(readFileSync(KEY_FILE));
-    if(clientKey.length !== 32) clientKey = null;
-}
-if(!clientKey) {
+let clientKey = existsSync(KEY_FILE) ? new Uint8Array(readFileSync(KEY_FILE)) : null;
+if(!clientKey || clientKey.length !== 32) {
     clientKey = generateSecretKey();
     writeFileSync(KEY_FILE, Buffer.from(clientKey));
 }
 
-// 1. 启动 p2p 适配层
-const child = spawn(process.execPath, ['p2p.js'], {
-    cwd: __dirname,
-    stdio: ['ignore', 'pipe', 'pipe']
-});
-
-let nodeId = '';
-child.stdout.on('data', (d) => {
-    const text = d.toString();
-    process.stdout.write('[p2p] ' + text);
-    const m = text.match(/ID:\s*([a-z0-9]+)/);
-    if(m) nodeId = m[1];
-});
-
-await new Promise((resolve) => {
-    const timer = setInterval(() => {
-        if(nodeId) { clearInterval(timer); resolve(); }
-    }, 200);
-    setTimeout(() => { clearInterval(timer); resolve(); }, 10000);
-});
-
-if(!nodeId) {
-    console.error('✗ 未拿到 p2p 节点 ID');
-    child.kill();
-    process.exit(1);
+// 从 allow.json 读服务器 ID（自连测试），或命令行指定
+const args = process.argv.slice(2);
+let serverId = args[0];
+if(!serverId) {
+    const allow = JSON.parse(readFileSync(resolve(__dirname, 'allow.json'), 'utf8'));
+    serverId = allow.allowedPeers[0];   // 默认第一个（p2p 自身）
 }
 
-// 2. 客户端节点 fetch
-const client = await createNode({ key: clientKey });
-console.log('\n[client] 节点 ID:', client.publicKey.toString());
+const node = await createNode({ key: clientKey });
+const myId = node.publicKey.toString();
+console.log('[client] 节点 ID:', myId);
 
+const session = await node.dial(serverId);
+console.log('[client] 已 dial（duplex）');
+
+// 与 Android forwardOverQuic 相同的请求字节
+const request =
+    'GET /admin/login HTTP/1.1\r\n' +
+    'Host: 127.0.0.1:8080\r\n' +
+    'Connection: close\r\n' +
+    'User-Agent: MeknowP2P-e2e\r\n' +
+    'Accept: text/html\r\n' +
+    '\r\n';
+
+const stream = await session.createBidirectionalStream();
+const writer = stream.writable.getWriter();
+await writer.write(new TextEncoder().encode(request));
+await writer.close();
+console.log('[client] 已写请求', request.length, 'B');
+
+const reader = stream.readable.getReader();
+const chunks = [];
+let total = 0;
 try {
-    const res = await client.fetch(`httpi://${nodeId}/admin/login`);
-    console.log(`[client] /admin/login → ${res.status}`);
-    const text = await res.text();
-    console.log('[client] 响应长度:', text.length, '| 含 <html:', text.includes('<html'));
-    if(res.status === 200 && text.includes('<html')) {
-        console.log('\n✓ 端到端转发验证通过');
-    } else if(res.status === 403) {
-        console.log('\n✗ 403：把上面的 [client] 节点 ID 加白名单后重跑:');
-        console.log('  node pair.js --add ' + client.publicKey.toString());
-    } else {
-        console.log('\n? 非预期状态:', res.status);
+    while(true) {
+        const { done, value } = await reader.read();
+        if(done) break;
+        total += value.length;
+        chunks.push(Buffer.from(value));
     }
 } catch(e) {
-    console.error('[client] fetch 失败:', e.message);
+    console.error('[client] 读失败:', e.message);
 }
 
-await client.close();
-child.kill('SIGTERM');
+console.log('[client] 响应', total, '字节');
+if(total > 0) {
+    const text = Buffer.concat(chunks).toString('utf8');
+    const statusLine = text.split('\r\n')[0];
+    console.log('[client] 状态行:', statusLine);
+    console.log('[client] 含 <html>:', text.includes('<html'));
+    if(statusLine.includes('403')) {
+        console.log('\n✗ 403：把上面的 [client] 节点 ID 配对后重跑：');
+        console.log('  node pair.js --add ' + myId);
+    } else if(statusLine.includes('200')) {
+        console.log('\n✓ 端到端 duplex 转发验证通过（与 Android 同路径）');
+    }
+} else {
+    console.log('\n✗ 空响应');
+}
+
+await node.close();
 process.exit(0);
