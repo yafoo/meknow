@@ -1,0 +1,38 @@
+[versions]
+agp = "8.10.1"
+kotlin = "2.2.21"
+coreKtx = "1.16.0"
+appcompat = "1.7.0"
+lifecycleRuntimeKtx = "2.9.1"
+activity = "1.10.1"
+material = "1.12.0"
+constraintlayout = "2.2.1"
+iroh = "1.1.0"
+jna = "5.15.0"
+zxing = "3.5.3"
+camerax = "1.4.2"
+ktor = "3.5.2"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+iroh = { group = "computer.iroh", name = "iroh-android", version.ref = "iroh" }
+iroh-jvm = { group = "computer.iroh", name = "iroh", version.ref = "iroh" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+# 二维码识别（纯 Java 核心库，无相机依赖）
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+# CameraX：相机预览 + 图像分析（扫码取流）
+camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+# Ktor 纯 HTTP 数据结构库（替代手写 HTTP/1.1 解析）
+ktor-http = { group = "io.ktor", name = "ktor-http", version.ref = "ktor" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
