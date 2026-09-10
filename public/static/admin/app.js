@@ -2243,9 +2243,16 @@ const P2pManage = {
                             </el-tooltip>
                         </template>
                     </el-table-column>
-                    <el-table-column label="状态" width="90">
+                    <el-table-column label="状态" width="150">
                         <template #default="{ row }">
-                            <el-tag v-if="row.online" type="success" size="small">在线</el-tag>
+                            <template v-if="row.online">
+                                <el-tag type="success" size="small">在线</el-tag>
+                                <el-tooltip :content="row.remoteAddr || ''" placement="top" :show-after="300">
+                                    <el-tag :type="row.path === 'p2p' ? 'primary' : 'warning'" size="small" style="margin-left: 4px">
+                                        {{ row.path === 'p2p' ? 'P2P' : '中继' }}
+                                    </el-tag>
+                                </el-tooltip>
+                            </template>
                             <el-tag v-else type="info" size="small">离线</el-tag>
                         </template>
                     </el-table-column>
