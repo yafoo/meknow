@@ -836,14 +836,11 @@ const CategoryTree = {
                         type: 'warning'
                     }
                 );
-                window.location.href = '/admin/login?logout=1';
+                window.location.href = '/admin/login/logout';
             } catch(e) {
                 // 用户取消操作
             }
         };
-
-        // 注：P2P 待授权数不在侧栏轮询（用户要求：常驻页面不轮询）。
-        // 配对提醒只在 P2P 管理页（P2pManage 组件自身 3s 轮询）查看。
 
         return {
             store,
