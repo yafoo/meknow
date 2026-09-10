@@ -1368,10 +1368,6 @@ html, body {
     font-size: 12px !important;
 }
 
-.p2p-entry-badge {
-    margin-right: 8px;
-}
-
 /* 自绘二维码图标（嵌 el-icon 内的 svg 直接铺满） */
 .p2p-icon-qr svg {
     width: 1em;

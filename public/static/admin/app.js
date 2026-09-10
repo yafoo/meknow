@@ -542,11 +542,9 @@ const CategoryTree = {
                     <el-button size="small" text @click="$router.push('/admin/tokens')" title="Token 管理">
                         <el-icon><Key /></el-icon>
                     </el-button>
-                    <el-badge :value="p2pPendingCount" :hidden="!p2pPendingCount" type="warning" class="p2p-entry-badge">
-                        <el-button size="small" text @click="$router.push('/admin/p2p')" title="P2P 管理">
-                            <el-icon><Connection /></el-icon>
-                        </el-button>
-                    </el-badge>
+                    <el-button size="small" text @click="$router.push('/admin/p2p')" title="P2P 管理">
+                        <el-icon><Connection /></el-icon>
+                    </el-button>
                     <el-button size="small" text @click="logout" title="退出登录">
                         <el-icon><SwitchButton /></el-icon>
                     </el-button>
@@ -827,24 +825,8 @@ const CategoryTree = {
             }
         };
 
-        // P2P 待授权数（侧栏 badge 提示；P2P 页面打开时由其自身弹窗处理）
-        const p2pPendingCount = ref(0);
-        let p2pPollTimer = null;
-        const pollP2p = async () => {
-            try {
-                const res = await request('/api/p2p/status');
-                if(res.state === 1) {
-                    p2pPendingCount.value = (res.data.pending || []).length;
-                }
-            } catch(e) { /* 静默 */ }
-        };
-        onMounted(() => {
-            pollP2p();
-            p2pPollTimer = setInterval(pollP2p, 5000);
-        });
-        onUnmounted(() => {
-            if(p2pPollTimer) clearInterval(p2pPollTimer);
-        });
+        // 注：P2P 待授权数不在侧栏轮询（用户要求：常驻页面不轮询）。
+        // 配对提醒只在 P2P 管理页（P2pManage 组件自身 3s 轮询）查看。
 
         return {
             store,
@@ -865,8 +847,7 @@ const CategoryTree = {
             saveCate,
             createNote,
             createNoteInCate,
-            logout,
-            p2pPendingCount
+            logout
         };
     }
 };
