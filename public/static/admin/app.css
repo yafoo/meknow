@@ -1202,12 +1202,6 @@ html, body {
     margin-bottom: 20px;
 }
 
-.p2p-node-label {
-    font-size: 13px;
-    color: #909399;
-    margin-bottom: 6px;
-}
-
 .p2p-node-id-row {
     display: flex;
     align-items: center;
@@ -1315,6 +1309,16 @@ html, body {
     word-break: break-all;
 }
 
+/* 表格内节点 ID 可点击复制 */
+.p2p-peer-id-copy {
+    cursor: pointer;
+    color: #409eff;
+}
+
+.p2p-peer-id-copy:hover {
+    text-decoration: underline;
+}
+
 .p2p-unnamed {
     color: #909399;
 }
@@ -1334,6 +1338,22 @@ html, body {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+/* 同行三列：名称定宽窄列、节点 ID 弹性填充、按钮自然宽 */
+.p2p-manual-row .p2p-manual-name {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.p2p-manual-row .p2p-manual-id {
+    flex: 1;
+    min-width: 220px;
+}
+
+.p2p-manual-row .p2p-manual-btn {
+    flex-shrink: 0;
 }
 
 .p2p-qrcode-body {
@@ -1639,9 +1659,12 @@ html, body {
 
     .p2p-manual-row {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    .p2p-manual-row .el-input {
+    .p2p-manual-row .p2p-manual-name,
+    .p2p-manual-row .p2p-manual-id,
+    .p2p-manual-row .p2p-manual-btn {
         width: 100%;
     }
 

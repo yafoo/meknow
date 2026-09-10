@@ -2187,9 +2187,9 @@ const P2pManage = {
             </div>
 
             <div class="p2p-content v-loading-parent" v-loading="loading">
-                <!-- 本节点 ID 卡片 -->
+                <!-- 本节点 ID -->
+                <div class="p2p-section-title">本节点 ID（手机端填这个，或扫二维码）</div>
                 <div class="p2p-node-card">
-                    <div class="p2p-node-label">本节点 ID（手机端填这个，或扫右侧二维码）</div>
                     <div class="p2p-node-id-row" v-if="status.nodeId">
                         <span class="p2p-node-id-main">{{ shortNodeId }}</span>
                         <span class="p2p-node-id-toggle" @click="idExpanded = !idExpanded" title="点击展开/收起完整 ID">
@@ -2199,10 +2199,10 @@ const P2pManage = {
                     <div class="p2p-node-id" v-if="status.nodeId && idExpanded" style="margin-top: 4px">{{ status.nodeId }}</div>
                     <div class="p2p-node-id" :class="{offline: !status.running}" v-if="!status.nodeId">P2P 服务未启动</div>
                     <div class="p2p-node-id-actions" v-if="status.nodeId">
-                        <el-button size="small" text @click="copyNodeId" title="复制完整 ID">
+                        <el-button size="small" @click="copyNodeId" title="复制完整 ID">
                             <el-icon><CopyDocument /></el-icon> 复制
                         </el-button>
-                        <el-button size="small" text @click="showIdDialog" title="显示二维码">
+                        <el-button size="small" @click="showIdDialog" title="显示二维码">
                             <el-icon class="p2p-icon-qr"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3V3zm2 2v3h3V5H5zM14 3h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zM14 14h3v3h-3v-3zM18 14h3v3h-3v-3zM14 18h3v3h-3v-3zM18 18h3v3h-3v-3z"/></svg></el-icon> 二维码
                         </el-button>
                     </div>
@@ -2238,8 +2238,8 @@ const P2pManage = {
                     </el-table-column>
                     <el-table-column prop="id" label="节点 ID" min-width="140">
                         <template #default="{ row }">
-                            <el-tooltip :content="row.id" placement="top" :show-after="300">
-                                <span class="p2p-peer-id">{{ row.id.substring(0, 10) }}…</span>
+                            <el-tooltip :content="row.id + '（点击复制）'" placement="top" :show-after="300">
+                                <span class="p2p-peer-id p2p-peer-id-copy" @click="copyText(row.id, '已复制节点 ID')">{{ row.id.substring(0, 10) }}…</span>
                             </el-tooltip>
                         </template>
                     </el-table-column>
@@ -2261,9 +2261,9 @@ const P2pManage = {
                             <span>{{ formatTime(row.time) }}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column label="操作" width="120" fixed="right">
+                    <el-table-column label="操作" width="90" fixed="right">
                         <template #default="{ row }">
-                            <el-button size="small" type="danger" text @click="removePeer(row)">移除</el-button>
+                            <el-button size="small" type="danger" plain @click="removePeer(row)">移除</el-button>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -2276,9 +2276,9 @@ const P2pManage = {
                 <div class="p2p-manual-add">
                     <div class="p2p-section-title">手动添加</div>
                     <div class="p2p-manual-row">
-                        <el-input v-model="manualId" placeholder="手机节点 ID（App 里显示/扫码获得）" size="default" clearable />
-                        <el-input v-model="manualName" placeholder="名称（如：我的手机）" size="default" style="width: 200px" />
-                        <el-button type="primary" @click="addManual" :disabled="!manualId">添加</el-button>
+                        <el-input v-model="manualName" placeholder="名称（如：我的手机）" size="default" class="p2p-manual-name" clearable />
+                        <el-input v-model="manualId" placeholder="手机节点 ID（App 里显示/扫码获得）" size="default" class="p2p-manual-id" clearable />
+                        <el-button type="primary" @click="addManual" :disabled="!manualId" class="p2p-manual-btn">添加</el-button>
                     </div>
                 </div>
             </div>
@@ -2351,13 +2351,17 @@ const P2pManage = {
             if(pollTimer) { clearInterval(pollTimer); pollTimer = null; }
         };
 
-        const copyNodeId = () => {
-            navigator.clipboard.writeText(status.value.nodeId).then(() => {
-                ElementPlus.ElMessage.success('已复制到剪贴板');
+        /** 通用复制：成功/失败提示可定制 */
+        const copyText = (text, okMsg = '已复制到剪贴板') => {
+            if(!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                ElementPlus.ElMessage.success(okMsg);
             }).catch(() => {
                 ElementPlus.ElMessage.error('复制失败');
             });
         };
+
+        const copyNodeId = () => copyText(status.value.nodeId);
 
         const showIdDialog = async () => {
             idDialogVisible.value = true;
@@ -2495,6 +2499,7 @@ const P2pManage = {
             idExpanded,
             shortNodeId,
             copyNodeId,
+            copyText,
             showIdDialog,
             authorize,
             confirmAuthorize,
