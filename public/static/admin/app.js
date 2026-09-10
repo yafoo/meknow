@@ -567,6 +567,9 @@ const CategoryTree = {
                     <el-button size="small" text @click="$router.push('/admin/tokens')" title="Token 管理">
                         <el-icon><Key /></el-icon>
                     </el-button>
+                    <el-button size="small" text @click="$router.push('/admin/graph')" title="知识图谱">
+                        <el-icon><Share /></el-icon>
+                    </el-button>
                     <el-button size="small" text @click="$router.push('/admin/p2p')" title="P2P 管理">
                         <el-icon><Connection /></el-icon>
                     </el-button>
@@ -2512,6 +2515,112 @@ const P2pManage = {
     }
 };
 
+// ==================== 知识图谱页面 ====================
+const GraphView = {
+    template: `
+        <div class="graph-page">
+            <div class="page-header">
+                <el-button class="page-header-back" text @click="$router.push('/admin')">
+                    <el-icon><ArrowLeft /></el-icon>
+                </el-button>
+                <span class="page-header-title">知识图谱</span>
+                <div class="page-header-actions">
+                    <el-button size="small" text @click="refresh" title="重新加载">
+                        <el-icon><Refresh /></el-icon>
+                    </el-button>
+                </div>
+            </div>
+            <div class="graph-content" v-loading="loading">
+                <div id="graph-network" class="graph-network-box"></div>
+                <div class="graph-info">
+                    共 <strong>{{ nodesData.length }}</strong> 个笔记节点，<strong>{{ edgesData.length }}</strong> 条双向链接。单击拖动布局，双击节点打开笔记。
+                </div>
+            </div>
+        </div>
+    `,
+    setup() {
+        const loading = ref(true);
+        const nodesData = ref([]);
+        const edgesData = ref([]);
+        let network = null;
+
+        const render = () => {
+            if(!window.vis || !document.getElementById('graph-network')) return;
+            const nodes = new vis.DataSet(nodesData.value.map(n => ({
+                id: n.id,
+                label: n.title || '无标题',
+                title: n.title || '无标题',
+                color: {
+                    background: '#409eff',
+                    border: '#337ecc',
+                    highlight: {background: '#66b1ff', border: '#409eff'}
+                },
+                font: {size: 13, color: '#333'},
+                shape: 'dot',
+                size: 16
+            })));
+            const edges = new vis.DataSet(edgesData.value.map(e => ({
+                from: e.from,
+                to: e.to,
+                arrows: 'to',
+                color: {color: '#c0c4cc', highlight: '#409eff'}
+            })));
+            if(network) { network.destroy(); network = null; }
+            network = new vis.Network(document.getElementById('graph-network'), {nodes, edges}, {
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -3000,
+                        centralGravity: 0.3,
+                        springLength: 150,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    }
+                },
+                interaction: {hover: true, tooltipDelay: 200},
+                edges: {width: 1, smooth: {type: 'continuous'}}
+            });
+            network.on('doubleClick', params => {
+                if(params.nodes.length > 0) {
+                    // admin 内打开笔记：写入 store 缓存并切回工作区
+                    store.openNote(params.nodes[0]);
+                }
+            });
+        };
+
+        const refresh = async () => {
+            loading.value = true;
+            try {
+                const res = await request('/api/graph/data');
+                if(res.state === 1) {
+                    nodesData.value = res.data.nodes || [];
+                    edgesData.value = res.data.edges || [];
+                    await nextTick();
+                    render();
+                } else {
+                    ElementPlus.ElMessage.error(res.msg || '加载失败');
+                }
+            } catch(e) {
+                ElementPlus.ElMessage.error('加载知识图谱失败');
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        onMounted(refresh);
+        onUnmounted(() => {
+            if(network) network.destroy();
+        });
+
+        return {
+            loading,
+            nodesData,
+            edgesData,
+            refresh
+        };
+    }
+};
+
 // ==================== 路由配置 ====================
 const routes = [
     { path: '/', redirect: '/admin' },
@@ -2519,6 +2628,7 @@ const routes = [
     { path: '/admin/settings', component: SiteSettings },
     { path: '/admin/tokens', component: TokenManage },
     { path: '/admin/p2p', component: P2pManage },
+    { path: '/admin/graph', component: GraphView },
     { path: '/admin/profile', component: UserProfile }
 ];
 
