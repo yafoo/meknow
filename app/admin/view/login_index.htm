@@ -15,20 +15,63 @@
         .form-group input:focus { outline: none; border-color: #409eff; }
         .btn { width: 100%; padding: 14px; background: #409eff; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
         .btn:hover { background: #66b1ff; }
+        .btn:disabled { background: #a0cfff; cursor: default; }
+        .login-tip { min-height: 20px; margin-top: 12px; font-size: 13px; color: #f56c6c; text-align: center; }
     </style>
 </head>
 <body>
     <div class="login-box">
         <h1>🧠 Meknow</h1>
-        <form method="post">
+        <form id="loginForm">
             <div class="form-group">
-                <input type="text" name="username" placeholder="用户名" required autofocus>
+                <input type="text" name="username" id="username" placeholder="用户名" required autofocus autocomplete="username">
             </div>
             <div class="form-group">
-                <input type="password" name="password" placeholder="密码" required>
+                <input type="password" name="password" id="password" placeholder="密码" required autocomplete="current-password">
             </div>
-            <button type="submit" class="btn">登录</button>
+            <button type="submit" class="btn" id="loginBtn">登录</button>
+            <div class="login-tip" id="tip"></div>
         </form>
     </div>
+    <script>
+        // AJAX 登录：响应 JSON（jj.js 检测 AJAX 特征），成功后 location.replace
+        // ——替换历史记录，WebView/浏览器「返回」不会再回到登录页
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var btn = document.getElementById('loginBtn');
+            var tip = document.getElementById('tip');
+            var username = document.getElementById('username').value.trim();
+            var password = document.getElementById('password').value;
+            if(!username || !password) { tip.textContent = '请输入用户名和密码'; return; }
+
+            btn.disabled = true;
+            btn.textContent = '登录中…';
+            tip.textContent = '';
+            try {
+                var res = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({username: username, password: password}).toString()
+                });
+                var json;
+                try { json = await res.json(); }
+                catch(_) { throw new Error('响应异常'); }
+
+                if(json && json.state === 1) {
+                    // data 为跳转地址（jj.js $success 的 url 参数）
+                    location.replace(json.data || '/admin');
+                    return;   // 页面即将跳转，不恢复按钮
+                }
+                tip.textContent = (json && json.msg) || '登录失败';
+            } catch(err) {
+                tip.textContent = '网络异常，请重试';
+            }
+            btn.disabled = false;
+            btn.textContent = '登录';
+        });
+    </script>
 </body>
 </html>

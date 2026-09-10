@@ -340,6 +340,23 @@ const store = reactive({
             tab.modified = true;
         }
     },
+
+    // ---- 编辑器内容强制同步钩子 ----
+    // Vditor 的 input 事件在输入法组合中/防抖窗口内可能未触发，content 停留旧值；
+    // 保存前必须强制从编辑器拉取最新内容（否则出现"保存成功但内容没变"）。
+    // NoteEditor 挂载时注册，卸载时清除。
+    editorSync: null,   // (noteId) => void：把 vditorInstance 当前值写回 note.content
+    registerEditorSync(fn) {
+        this.editorSync = fn;
+    },
+    /** 保存前调用：同步当前编辑器内容到 store（未注册或笔记未打开时静默跳过） */
+    syncEditorContent() {
+        try {
+            this.editorSync && this.editorSync();
+        } catch(e) {
+            console.error('编辑器内容同步失败', e);
+        }
+    },
     
     // 获取当前 Tab
     get activeTab() {
@@ -1318,6 +1335,20 @@ const NoteEditor = {
             }
         };
 
+        // 注册「保存前强制同步」钩子：从 vditorInstance 拉最新内容写回 note.content。
+        // input 事件在输入法组合中/防抖窗口内可能未触发，直接读 note.content 会保存旧值。
+        store.registerEditorSync(() => {
+            if(note.value && vditorInstance) {
+                const latest = vditorInstance.getValue();
+                if(latest !== (note.value.content || '')) {
+                    note.value.content = latest;
+                }
+            }
+        });
+        onUnmounted(() => {
+            if(store.editorSync) store.registerEditorSync(null);
+        });
+
         watch(() => store.activeTabId, async () => {
             await nextTick();
             if(note.value && vditorInstance) {
@@ -1507,6 +1538,9 @@ const Workspace = {
                 ElementPlus.ElMessage.warning('请输入标题');
                 return;
             }
+
+            // 强制从编辑器拉取最新内容（input 事件可能未触发完，防"保存成功但内容没变"）
+            store.syncEditorContent();
 
             // 过滤掉虚拟字段（来自 JOIN 查询）
             const noteData = {
