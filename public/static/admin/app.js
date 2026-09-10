@@ -826,6 +826,7 @@ const CategoryTree = {
         };
 
         const logout = async () => {
+            let confirmed = false;
             try {
                 await ElementPlus.ElMessageBox.confirm(
                     '确定要退出登录吗？',
@@ -836,9 +837,21 @@ const CategoryTree = {
                         type: 'warning'
                     }
                 );
-                window.location.href = '/admin/login/logout';
+                confirmed = true;
+                // AJAX 退出：响应 JSON（jj.js 检测 AJAX 特征），成功后 location.replace
+                // 替换历史——返回键不会回到已退出的 admin 页
+                const res = await fetch('/admin/login/logout', {
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+                let json;
+                try { json = await res.json(); } catch(_) { json = null; }
+                if(json && json.state === 1) {
+                    location.replace(json.data || '/admin/login');
+                } else if(confirmed) {
+                    ElementPlus.ElMessage.error((json && json.msg) || '网络异常，退出失败');
+                }
             } catch(e) {
-                // 用户取消操作
+                // 用户取消确认框（非错误）：无动作
             }
         };
 
