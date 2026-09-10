@@ -3,7 +3,7 @@ const Base = require('./base');
 class Note extends Base
 {
     async note() {
-        const id = this.$request.get('id', 0);
+        const id = this.$request.param('id', 0);
         if(!id) return this.$error('参数错误');
         
         const note = await this.$model.note.getPublicNote(id);

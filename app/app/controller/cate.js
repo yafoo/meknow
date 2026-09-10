@@ -3,7 +3,7 @@ const Base = require('./base');
 class Cate extends Base
 {
     async cate() {
-        const id = this.$request.get('id', 0);
+        const id = this.$request.param('id', 0);
         if(!id) return this.$error('参数错误');
         
         const cate = await this.$model.cate.get({id, is_public: 1});
