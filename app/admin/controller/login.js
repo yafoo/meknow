@@ -38,13 +38,20 @@ class Login extends Controller
             this.$cookie.set('user', user.id, {maxAge: 7 * 24 * 3600 * 1000});
             this.$success('登录成功！', '/admin');
         } else {
+            const userId = this.$cookie.get('user');
+            if(userId) {
+                const user = await this.$db.table('user').where({id: userId}).find();
+                if(user) {
+                    return this.$redirect('index/index');
+                }
+            }
             await this.$fetch();
         }
     }
 
     async logout() {
         this.$cookie.set('user', null);
-        this.$success('退出成功！', '/admin/login');
+        this.$success('退出成功！', 'login/index');
     }
 }
 
