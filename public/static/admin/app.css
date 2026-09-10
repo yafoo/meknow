@@ -997,6 +997,10 @@ html, body {
     background: #f0f2f5;
 }
 
+.tree-footer-actions  .el-button+.el-button {
+    margin-left: 6px;
+}
+
 /* ==================== 统一页面头部 ==================== */
 .page-header {
     display: flex;
