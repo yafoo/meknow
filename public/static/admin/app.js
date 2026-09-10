@@ -45,6 +45,9 @@ const store = reactive({
     notes: [],
     notesTotal: 0,
     notesLoading: false,
+    // 分页（后端 /api/note/list 已支持 page/rows）
+    notesPage: 1,
+    notesPageSize: 20,
 
     // 笔记数据缓存
     notesCache: {},
@@ -162,20 +165,25 @@ const store = reactive({
         }
     },
 
-    // 加载笔记列表
-    async loadNotes(cateId, keyword = '') {
+    // 加载笔记列表（分页；resetPage=true 时回到第 1 页——搜索/切分类/建笔记）
+    async loadNotes(cateId, keyword = '', page = null, resetPage = false) {
         this.notesLoading = true;
         try {
+            if(resetPage || page === null) {
+                page = 1;
+            }
             const params = new URLSearchParams();
             if(cateId !== null && cateId !== undefined) {
                 params.set('cate_id', cateId);
             }
-            params.set('rows', 200);
+            params.set('rows', this.notesPageSize);
+            params.set('page', page);
             if(keyword) params.set('q', keyword);
             const data = await request(`/api/note/list?${params}`);
             if(data.state === 1) {
                 this.notes = data.data.list || [];
                 this.notesTotal = data.data.total || 0;
+                this.notesPage = page;
             }
         } catch(e) {
             console.error('加载笔记列表失败', e);
@@ -939,6 +947,19 @@ const NoteList = {
                     </div>
                 </div>
             </div>
+            <!-- 底部分页条（总数超过每页条数才显示；el-pagination small 模式） -->
+            <div class="note-list-pagination" v-if="totalPages > 1">
+                <el-pagination
+                    size="small"
+                    layout="prev, pager, next"
+                    :page-size="store.notesPageSize"
+                    :total="store.notesTotal"
+                    :current-page="store.notesPage"
+                    :pager-count="5"
+                    :disabled="store.notesLoading"
+                    @current-change="goPage"
+                />
+            </div>
         </div>
     `,
     setup() {
@@ -946,6 +967,19 @@ const NoteList = {
         const noteListBody = ref(null);
         let searchTimer = null;
         let sortableInstance = null;
+
+        // 总页数（Math.max 防 total=0 时显示 0 页）
+        const totalPages = computed(() => Math.max(1, Math.ceil(store.notesTotal / store.notesPageSize)));
+
+        // 翻页（el-pagination @current-change 直传页码）：重新加载指定页（保持当前分类与搜索词）
+        const goPage = (page) => {
+            if(!page || page < 1 || page > totalPages.value || page === store.notesPage) return;
+            store.loadNotes(store.currentCateId, searchKeyword.value, page);
+            // 翻页后列表滚回顶部
+            nextTick(() => {
+                if(noteListBody.value) noteListBody.value.scrollTop = 0;
+            });
+        };
 
         const initSortable = () => {
             if(!noteListBody.value) return;
@@ -1171,6 +1205,8 @@ const NoteList = {
             store,
             searchKeyword,
             noteListBody,
+            totalPages,
+            goPage,
             onSearch,
             formatTime,
             handleCommand,
