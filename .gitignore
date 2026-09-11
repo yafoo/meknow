@@ -1,0 +1,9 @@
+node_modules
+scripts
+types.js
+test-data.js
+data/menote.db
+data/p2p-key.bin
+data/p2p-allow.json
+config/lock.js
+public/upload

@@ -208,7 +208,7 @@ fun simpleResponse(status: HttpStatusCode, text: String): HttpResponseData {
 
 /**
  * P2P 代理核心：
- *   WebView → 本地 ServerSocket (127.0.0.1:8080) → iroh QUIC 双向流（ALPN iroh-http/2）
+ *   WebView → 本地 ServerSocket (127.0.0.1:8080) → iroh QUIC 双向流（ALPN menote-p2p/1）
  *   → 电脑端 menote lib/p2p.js → jj.js 应用栈 → MeNote。
  *
  * - 每个 HTTP 请求独占一条 QUIC 双向流；QUIC 连接级复用
