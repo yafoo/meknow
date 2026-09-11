@@ -208,7 +208,7 @@ fun simpleResponse(status: HttpStatusCode, text: String): HttpResponseData {
 
 /**
  * P2P 代理核心：
- *   WebView → 本地 ServerSocket (127.0.0.1:8080) → iroh QUIC 双向流（ALPN menote-p2p/1）
+ *   WebView → 本地 ServerSocket (127.0.0.1:3107，占用自动+1) → iroh QUIC 双向流（ALPN menote-p2p/1）
  *   → 电脑端 menote lib/p2p.js → jj.js 应用栈 → MeNote。
  *
  * - 每个 HTTP 请求独占一条 QUIC 双向流；QUIC 连接级复用
@@ -220,7 +220,8 @@ fun simpleResponse(status: HttpStatusCode, text: String): HttpResponseData {
  */
 class IrohProxy(
     val serverNodeId: String,
-    private val port: Int = 8080,
+    /** 期望监听端口；被占用时自动 +1 递增（最多试 11 个） */
+    private val port: Int = 3107,
     private val keyStorePath: java.io.File? = null
 ) {
     companion object {
@@ -284,6 +285,11 @@ class IrohProxy(
     /** 本地代理是否可开始收请求（serverSocket 已监听） */
     @Volatile
     var isReady: Boolean = false
+        private set
+
+    /** 实际监听端口（占用自动 +1 后的值），未启动时为 0 */
+    @Volatile
+    var actualPort: Int = 0
         private set
 
     /**
@@ -361,10 +367,28 @@ class IrohProxy(
                 }
 
                 // 3. 启动本地 HTTP 代理（先监听，连接慢慢建 —— 连不上时 WebView 会拿到 502）
-                val ss = ServerSocket(port, 64, java.net.InetAddress.getByName("127.0.0.1"))
+                //    端口被占用则自动 +1（最多试 11 个候选），WebView 从 actualPort 取实际端口
+                var ss: ServerSocket? = null
+                var boundPort = 0
+                for(candidate in port until port + 11) {
+                    try {
+                        ss = ServerSocket(candidate, 64, java.net.InetAddress.getByName("127.0.0.1"))
+                        boundPort = candidate
+                        break
+                    } catch(e: java.io.IOException) {
+                        log("   端口 $candidate 被占用，尝试 ${candidate + 1}…")
+                    }
+                }
+                if(ss == null) {
+                    log("✗ 本地代理启动失败：端口 $port~${port + 10} 全被占用")
+                    setState(State.STOPPED)
+                    running.set(false)
+                    return@launch
+                }
                 serverSocket = ss
+                actualPort = boundPort
                 isReady = true
-                log("② 本地代理已监听 http://127.0.0.1:$port（连接建立前访问会 502）")
+                log("② 本地代理已监听 http://127.0.0.1:$boundPort（连接建立前访问会 502）")
 
                 // 4. 连接到电脑端（无限重试：配对/网络恢复后自动连上）
                 ensureConnection(remoteId)
@@ -391,6 +415,7 @@ class IrohProxy(
     fun stop() {
         if (!running.getAndSet(false)) return
         isReady = false
+        actualPort = 0
         setState(State.STOPPED)
         scope.launch {
             watchdog?.cancel()

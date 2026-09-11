@@ -154,7 +154,7 @@ class MainActivity : AppCompatActivity() {
 
             val intent = Intent(this, ProxyService::class.java).apply {
                 putExtra(ProxyService.EXTRA_SERVER_ID, serverId)
-                putExtra(ProxyService.EXTRA_PORT, 8080)
+                putExtra(ProxyService.EXTRA_PORT, 3107)
             }
             ContextCompat.startForegroundService(this, intent)
             startBtn.isEnabled = false

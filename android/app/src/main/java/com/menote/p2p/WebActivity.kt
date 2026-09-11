@@ -14,7 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 
 /**
- * WebView 页：加载本地代理 http://127.0.0.1:8080/admin/login
+ * WebView 页：加载本地代理 http://127.0.0.1:<实际端口>/admin/login（默认 3107，占用自动 +1）
  * 所有请求（静态资源 / API）都经本地代理走 P2P 隧道，SPA 无任何改动。
  *
  * Cookie 持久化修复（2026-09-09）：
@@ -117,7 +117,9 @@ class WebActivity : AppCompatActivity() {
 
         webView.settings.mediaPlaybackRequiresUserGesture = false
 
-        webView.loadUrl("http://127.0.0.1:8080/admin/login")
+        // 端口跟随代理实际监听值（被占用会 +1）；未启动回退默认 3107
+        val port = ProxyService.proxy?.actualPort?.takeIf { it > 0 } ?: 3107
+        webView.loadUrl("http://127.0.0.1:$port/admin/login")
     }
 
     override fun onPause() {

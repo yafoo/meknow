@@ -8,7 +8,7 @@ process.on('uncaughtException', (err) => {
 });
 
 // server
-const port = 3000;
+const port = 3107;
 const app = new App();
 app.listen(port, async function(err){
     !err && Logger.system('MeNote server is ready on http://localhost:' + port);

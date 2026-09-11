@@ -3,7 +3,7 @@
 通过 iroh P2P 隧道在手机上访问家里电脑/NAS 上的 MeNote，无需公网 IP、端口映射。
 
 - 电脑端 MeNote 主服务自带 P2P 网关（`lib/p2p.js`，随 `server.js` 启动）
-- 本 App 在手机本地 `127.0.0.1:8080` 起 HTTP 代理，WebView 加载本地代理
+- 本 App 在手机本地 `127.0.0.1:3107` 起 HTTP 代理（被占用自动 +1，最多试 11 个），WebView 加载本地代理
 - 每个请求经 iroh QUIC 双向流（ALPN `menote-p2p/1`）直连电脑端，进入 MeNote 完整应用栈
 - MeNote 的 Vue SPA **零改动**
 
@@ -41,7 +41,7 @@ gradlew.bat assembleDebug
 | `ProxyService.kt` | 前台服务：保活隧道（Android 后台限制） |
 | `MainActivity.kt` | 配置页：服务器 ID 输入、扫码、本机节点 ID 展示、启停、日志 |
 | `ScanActivity.kt` | 扫码：zxing + CameraX 识别服务器节点 ID 二维码，结果自动 hex→base32 归一 |
-| `WebActivity.kt` | WebView：加载 `http://127.0.0.1:8080/admin/login`，拦截非本地 URL |
+| `WebActivity.kt` | WebView：加载 `http://127.0.0.1:<代理实际端口>/admin/login`，拦截非本地 URL |
 
 ## 已知设计取舍
 

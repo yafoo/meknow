@@ -35,7 +35,7 @@ class ProxyService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val serverId = intent?.getStringExtra(EXTRA_SERVER_ID)
-        val port = intent?.getIntExtra(EXTRA_PORT, 8080) ?: 8080
+        val port = intent?.getIntExtra(EXTRA_PORT, 3107) ?: 3107
 
         if (serverId.isNullOrBlank()) {
             stopSelf()
