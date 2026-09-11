@@ -1,9 +1,18 @@
 const {App, Logger} = require('jj.js');
 
-// 忽略客户端提前断开连接的错误
+// 忽略客户端提前断开连接的错误：
+//   - ERR_STREAM_PREMATURE_CLOSE：手机端 QUIC 流半关闭时 http.Server 的正常反应
+//   - P2P 传输层 NAPI 错误（ClosedStream/GenericFailure 等）：手机断网/切网时
+//     iroh 流关闭的连锁反应，lib/p2p.js 的 shim 已本地消化，此处兜底防逃逸。
+//     不匹配的未知错误仍向上抛（保持对真 bug 的可见性）。
 process.on('uncaughtException', (err) => {
-    // @ts-ignore
-    if (err.code === 'ERR_STREAM_PREMATURE_CLOSE') return;
+    const known = err.code === 'ERR_STREAM_PREMATURE_CLOSE'
+        || /ClosedStream|StreamClosed|LocallyClosed|stopped|closed stream|unknown handle/i
+            .test(String(err?.message || err));
+    if(known) {
+        Logger.warning('[p2p] 忽略传输层断开错误: ' + (err.message || err));
+        return;
+    }
     throw err;
 });
 
