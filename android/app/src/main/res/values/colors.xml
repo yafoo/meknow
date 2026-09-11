@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MeNote 主题色：logo 圆环色 -->
+    <color name="brand_primary">#FF76CCB5</color>
+    <!-- 日志区（浅色） -->
+    <color name="log_bg">#FFF5F5F5</color>
+    <color name="log_text">#FF333333</color>
+    <!-- 标签文字（浅色） -->
+    <color name="label_secondary">#FF999999</color>
+    <color name="label_tertiary">#FF555555</color>
+
+    <!-- ===== Material3 主题色覆盖（亮色）：brand 色 → 完整 tonal palette =====
+         以 #76CCB5 为种子生成，容器色适配 brand 的浅色底 -->
+    <color name="m3_primary">#FF00695C</color>
+    <color name="m3_on_primary">#FFFFFFFF</color>
+    <color name="m3_primary_container">#FF9CF2DB</color>
+    <color name="m3_on_primary_container">#FF00201B</color>
+    <color name="m3_secondary">#FF4A635C</color>
+    <color name="m3_on_secondary">#FFFFFFFF</color>
+    <color name="m3_secondary_container">#FFCCE8E0</color>
+    <color name="m3_on_secondary_container">#FF062019</color>
+    <color name="m3_tertiary">#FF456179</color>
+    <color name="m3_on_tertiary">#FFFFFFFF</color>
+    <color name="m3_tertiary_container">#FFCCE5FF</color>
+    <color name="m3_on_tertiary_container">#FF001E31</color>
+</resources>

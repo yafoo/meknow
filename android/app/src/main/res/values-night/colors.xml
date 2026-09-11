@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== Material3 主题色覆盖（暗色）：brand 色暗色变体 ===== -->
+    <color name="m3_primary">#FF80D5BF</color>
+    <color name="m3_on_primary">#FF003730</color>
+    <color name="m3_primary_container">#FF005044</color>
+    <color name="m3_on_primary_container">#FF9CF2DB</color>
+    <color name="m3_secondary">#FFB0CCC3</color>
+    <color name="m3_on_secondary">#FF1C352E</color>
+    <color name="m3_secondary_container">#FF334B44</color>
+    <color name="m3_on_secondary_container">#FFCCE8E0</color>
+    <color name="m3_tertiary">#FFADCAE6</color>
+    <color name="m3_on_tertiary">#FF143349</color>
+    <color name="m3_tertiary_container">#FF2D4961</color>
+    <color name="m3_on_tertiary_container">#FFCCE5FF</color>
+
+    <!-- 日志区（暗色） -->
+    <color name="log_bg">#FF1A1C1B</color>
+    <color name="log_text">#FFCCCCCC</color>
+    <!-- 标签文字（暗色） -->
+    <color name="label_secondary">#FF9E9E9E</color>
+    <color name="label_tertiary">#FFBBBBBB</color>
+</resources>

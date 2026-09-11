@@ -103,7 +103,7 @@
             android:layout_height="wrap_content"
             android:text="本机节点 ID（点击复制）"
             android:textSize="11sp"
-            android:textColor="#999" />
+            android:textColor="@color/label_secondary" />
 
         <TextView
             android:id="@+id/myIdText"
@@ -113,7 +113,7 @@
             android:fontFamily="monospace"
             android:text=""
             android:textSize="10sp"
-            android:textColor="#555"
+            android:textColor="@color/label_tertiary"
             android:padding="8dp"
             android:background="?attr/selectableItemBackground" />
     </LinearLayout>
@@ -132,7 +132,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="4dp"
-        android:background="#F5F5F5">
+        android:background="@color/log_bg">
 
         <TextView
             android:id="@+id/logView"
@@ -141,7 +141,7 @@
             android:fontFamily="monospace"
             android:padding="8dp"
             android:text=""
-            android:textColor="#333"
+            android:textColor="@color/log_text"
             android:textSize="11sp" />
     </ScrollView>
 

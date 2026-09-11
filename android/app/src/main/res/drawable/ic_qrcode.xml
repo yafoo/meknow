@@ -5,29 +5,30 @@
     android:viewportHeight="24">
 
     <!-- 二维码图标：三个定位角 + 右下角小方块 + 数据点 -->
+    <!-- fillColor 跟随主题（?attr/colorOnSurface）：亮色黑、暗色白 -->
     <!-- 左上定位角 -->
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="?attr/colorOnSurface"
         android:pathData="M3,3 h7 v7 h-7 z M5,5 v3 h3 v-3 z" />
     <!-- 右上定位角 -->
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="?attr/colorOnSurface"
         android:pathData="M14,3 h7 v7 h-7 z M16,5 v3 h3 v-3 z" />
     <!-- 左下定位角 -->
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="?attr/colorOnSurface"
         android:pathData="M3,14 h7 v7 h-7 z M5,16 v3 h3 v-3 z" />
     <!-- 右下数据点阵 -->
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="?attr/colorOnSurface"
         android:pathData="M14,14 h3 v3 h-3 z" />
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="?attr/colorOnSurface"
         android:pathData="M18,14 h3 v3 h-3 z" />
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="?attr/colorOnSurface"
         android:pathData="M14,18 h3 v3 h-3 z" />
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="?attr/colorOnSurface"
         android:pathData="M18,18 h3 v3 h-3 z" />
 </vector>

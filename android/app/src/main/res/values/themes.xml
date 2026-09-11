@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MeNote" parent="Theme.Material3.DayNight.NoActionBar" />
+    <!-- MeNote 主题：Material3 DayNight，主题色覆盖为 logo 色 #76CCB5 -->
+    <style name="Theme.MeNote" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/m3_primary</item>
+        <item name="colorOnPrimary">@color/m3_on_primary</item>
+        <item name="colorPrimaryContainer">@color/m3_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/m3_on_primary_container</item>
+        <item name="colorSecondary">@color/m3_secondary</item>
+        <item name="colorOnSecondary">@color/m3_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/m3_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/m3_on_secondary_container</item>
+        <item name="colorTertiary">@color/m3_tertiary</item>
+        <item name="colorOnTertiary">@color/m3_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/m3_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/m3_on_tertiary_container</item>
+    </style>
 </resources>
