@@ -19,13 +19,15 @@ process.on('uncaughtException', (err) => {
 // server
 const port = 3107;
 const app = new App();
-app.listen(port, async function(err){
+// 保留监听句柄：优雅退出时 p2p.shutdown() 第一步就解绑端口，
+// 避免 iroh 关闭慢/卡住期间（0~3s 或更久）新进程 bind 不到端口
+const listenServer = app.listen(port, async function(err){
     !err && Logger.system('MeNote server is ready on http://localhost:' + port);
     // P2P 服务（lib/p2p.js，官方 @number0/iroh）：随主服务启动
     if(!err) {
         try {
             const p2p = require('./lib/p2p');
-            await p2p.init(app);
+            await p2p.init(app, {listenServer});
         } catch(e) {
             Logger.error('[p2p] 启动失败: ' + e.message);
         }
