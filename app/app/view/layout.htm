@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} - {{site.sitename}}</title>
+    <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="/static/app/style.css">
     {{block 'head'}}{{/block}}
 </head>
@@ -11,7 +12,7 @@
     <div class="container">
         <!-- 头部导航 -->
         <header class="header">
-            <a href="/" class="logo">🧠 {{site.sitename}}</a>
+            <a href="/" class="logo"><img src="/logo.png" alt="logo" class="logo-img">{{site.sitename}}</a>
             <nav class="nav">
                 {{each cates cate}}
                 <a href="/cate/{{cate.id}}">{{cate.icon}} {{cate.name}}</a>

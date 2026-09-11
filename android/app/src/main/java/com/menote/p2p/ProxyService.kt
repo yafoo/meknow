@@ -101,7 +101,7 @@ class ProxyService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("MeNote")
             .setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pending)          // 点击通知 → 打开主界面
             .setAutoCancel(false)
             .setOngoing(true)

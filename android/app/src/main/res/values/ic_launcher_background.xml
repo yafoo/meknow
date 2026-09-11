@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- adaptive icon 背景色：取自 logo 圆环色 #76ccb5，视觉上与徽章边缘衔接 -->
+    <color name="ic_launcher_background">#76ccb5</color>
+</resources>
