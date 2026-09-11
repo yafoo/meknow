@@ -1,4 +1,4 @@
-// Meknow Vue3 管理后台应用
+// MeNote Vue3 管理后台应用
 
 const { createApp, ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } = Vue;
 const { createRouter, createWebHashHistory } = VueRouter;

@@ -1,4 +1,4 @@
-package com.meknow.p2p
+package com.menote.p2p
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -17,7 +17,7 @@ import androidx.core.app.NotificationCompat
 class ProxyService : Service() {
 
     companion object {
-        const val CHANNEL_ID = "meknow_p2p"
+        const val CHANNEL_ID = "menote_p2p"
         const val NOTIFICATION_ID = 1
         const val EXTRA_SERVER_ID = "server_id"
         const val EXTRA_PORT = "port"
@@ -81,7 +81,7 @@ class ProxyService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val ch = NotificationChannel(
                 CHANNEL_ID,
-                "Meknow P2P 隧道",
+                "MeNote P2P 隧道",
                 NotificationManager.IMPORTANCE_LOW
             )
             ch.description = "维持与家里电脑的 P2P 连接"
@@ -99,7 +99,7 @@ class ProxyService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Meknow P2P")
+            .setContentTitle("MeNote")
             .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(pending)          // 点击通知 → 打开主界面

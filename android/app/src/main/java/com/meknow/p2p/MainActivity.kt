@@ -1,4 +1,4 @@
-package com.meknow.p2p
+package com.menote.p2p
 
 import android.content.Intent
 import android.os.Build

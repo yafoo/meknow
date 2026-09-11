@@ -9,7 +9,7 @@ class Index extends Controller
     async _init() {
         this.base_dir = this.$config.app.base_dir;
         this.lockFile = this.base_dir + '/config/lock.js';
-        this.sqlFile = this.base_dir + '/app/install/meknow_sqlite.sql';
+        this.sqlFile = this.base_dir + '/app/install/menote_sqlite.sql';
 
         if(await this._isInstalled()) {
             return this.$error('系统已安装！', '/');
@@ -83,7 +83,7 @@ class Index extends Controller
 
             // 插入默认站点配置
             const siteData = [
-                {group: 'basic', type: 'input', key: 'sitename', title: '站点名称', value: 'Meknow', tips: '', sort: 0},
+                {group: 'basic', type: 'input', key: 'sitename', title: '站点名称', value: 'MeNote', tips: '', sort: 0},
                 {group: 'basic', type: 'textarea', key: 'description', title: '站点描述', value: '我的个人知识库', tips: '', sort: 1},
                 {group: 'display', type: 'input', key: 'list_rows', title: '列表条数', value: '20', tips: '', sort: 0},
             ];

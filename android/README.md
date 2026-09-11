@@ -1,11 +1,11 @@
-# MeknowP2P（Android）
+# MeNote（Android）
 
-通过 iroh P2P 隧道在手机上访问家里电脑/NAS 上的 Meknow，无需公网 IP、端口映射。
+通过 iroh P2P 隧道在手机上访问家里电脑/NAS 上的 MeNote，无需公网 IP、端口映射。
 
-- 电脑端跑 [meknow/p2p](../wwwroot/zzz/meknow/p2p)（iroh-http-node 适配层）
+- 电脑端跑 [menote/p2p](../wwwroot/zzz/menote/p2p)（iroh-http-node 适配层）
 - 本 App 在手机本地 `127.0.0.1:8080` 起 HTTP 代理，WebView 加载本地代理
-- 每个请求经 iroh QUIC 双向流（ALPN `iroh-http/2`）转发到电脑端，再反代到 Meknow
-- Meknow 的 Vue SPA **零改动**
+- 每个请求经 iroh QUIC 双向流（ALPN `iroh-http/2`）转发到电脑端，再反代到 MeNote
+- MeNote 的 Vue SPA **零改动**
 
 ## 配对流程
 
@@ -13,7 +13,7 @@
 2. 手机装本 App，填入服务器节点 ID，点「启动隧道」
 3. App 显示**本机节点 ID**
 4. 电脑端执行 `node pair.js --add <本机节点ID>` 完成配对（Peer-Id 白名单）
-5. 手机点「打开 Meknow」→ 登录 admin → 用笔记
+5. 手机点「打开 MeNote」→ 登录 admin → 用笔记
 
 ## 构建
 

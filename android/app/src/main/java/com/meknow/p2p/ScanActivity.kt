@@ -1,4 +1,4 @@
-package com.meknow.p2p
+package com.menote.p2p
 
 import android.Manifest
 import android.content.pm.PackageManager

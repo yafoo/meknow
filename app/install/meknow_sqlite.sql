@@ -1,7 +1,7 @@
--- Meknow 数据库建表脚本 (SQLite)
+-- MeNote 数据库建表脚本 (SQLite)
 
 -- 笔记表
-CREATE TABLE IF NOT EXISTS `meknow_note` (
+CREATE TABLE IF NOT EXISTS `menote_note` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `cate_id` INTEGER NOT NULL DEFAULT 0,        -- 分类 ID
   `title` VARCHAR(200) NOT NULL DEFAULT '',    -- 标题
@@ -13,11 +13,11 @@ CREATE TABLE IF NOT EXISTS `meknow_note` (
   `update_time` INTEGER NOT NULL DEFAULT 0     -- 更新时间
 );
 
-CREATE INDEX IF NOT EXISTS `idx_note_cate_id` ON `meknow_note` (`cate_id`);
-CREATE INDEX IF NOT EXISTS `idx_note_add_time` ON `meknow_note` (`add_time`);
+CREATE INDEX IF NOT EXISTS `idx_note_cate_id` ON `menote_note` (`cate_id`);
+CREATE INDEX IF NOT EXISTS `idx_note_add_time` ON `menote_note` (`add_time`);
 
 -- 分类表（树形）
-CREATE TABLE IF NOT EXISTS `meknow_cate` (
+CREATE TABLE IF NOT EXISTS `menote_cate` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `pid` INTEGER NOT NULL DEFAULT 0,            -- 父分类 ID，0=顶级
   `name` VARCHAR(100) NOT NULL DEFAULT '',     -- 分类名称
@@ -28,21 +28,21 @@ CREATE TABLE IF NOT EXISTS `meknow_cate` (
   `add_time` INTEGER NOT NULL DEFAULT 0        -- 创建时间
 );
 
-CREATE INDEX IF NOT EXISTS `idx_cate_pid` ON `meknow_cate` (`pid`);
+CREATE INDEX IF NOT EXISTS `idx_cate_pid` ON `menote_cate` (`pid`);
 
 -- 双向链接表
-CREATE TABLE IF NOT EXISTS `meknow_note_link` (
+CREATE TABLE IF NOT EXISTS `menote_note_link` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `source_id` INTEGER NOT NULL DEFAULT 0,      -- 来源笔记 ID
   `target_id` INTEGER NOT NULL DEFAULT 0,      -- 目标笔记 ID
   `add_time` INTEGER NOT NULL DEFAULT 0        -- 创建时间
 );
 
-CREATE INDEX IF NOT EXISTS `idx_link_source` ON `meknow_note_link` (`source_id`);
-CREATE INDEX IF NOT EXISTS `idx_link_target` ON `meknow_note_link` (`target_id`);
+CREATE INDEX IF NOT EXISTS `idx_link_source` ON `menote_note_link` (`source_id`);
+CREATE INDEX IF NOT EXISTS `idx_link_target` ON `menote_note_link` (`target_id`);
 
 -- 附件表
-CREATE TABLE IF NOT EXISTS `meknow_attach` (
+CREATE TABLE IF NOT EXISTS `menote_attach` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `note_id` INTEGER NOT NULL DEFAULT 0,        -- 关联笔记 ID
   `filename` VARCHAR(200) NOT NULL DEFAULT '', -- 文件名
@@ -52,10 +52,10 @@ CREATE TABLE IF NOT EXISTS `meknow_attach` (
   `add_time` INTEGER NOT NULL DEFAULT 0        -- 上传时间
 );
 
-CREATE INDEX IF NOT EXISTS `idx_attach_note_id` ON `meknow_attach` (`note_id`);
+CREATE INDEX IF NOT EXISTS `idx_attach_note_id` ON `menote_attach` (`note_id`);
 
 -- 用户表
-CREATE TABLE IF NOT EXISTS `meknow_user` (
+CREATE TABLE IF NOT EXISTS `menote_user` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `username` VARCHAR(50) NOT NULL DEFAULT '',
   `password` VARCHAR(50) NOT NULL DEFAULT '',
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `meknow_user` (
 );
 
 -- API Token 表
-CREATE TABLE IF NOT EXISTS `meknow_token` (
+CREATE TABLE IF NOT EXISTS `menote_token` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `user_id` INTEGER NOT NULL DEFAULT 0,
   `name` VARCHAR(100) NOT NULL DEFAULT '',
@@ -77,10 +77,10 @@ CREATE TABLE IF NOT EXISTS `meknow_token` (
   `update_time` INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS `idx_token` ON `meknow_token` (`token`);
+CREATE INDEX IF NOT EXISTS `idx_token` ON `menote_token` (`token`);
 
 -- 站点配置表（KV）
-CREATE TABLE IF NOT EXISTS `meknow_site` (
+CREATE TABLE IF NOT EXISTS `menote_site` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `group` VARCHAR(20) NOT NULL DEFAULT '',
   `type` VARCHAR(20) NOT NULL DEFAULT '',

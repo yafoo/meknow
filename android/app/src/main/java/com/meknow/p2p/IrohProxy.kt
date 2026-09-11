@@ -1,4 +1,4 @@
-package com.meknow.p2p
+package com.menote.p2p
 
 import computer.iroh.Connection
 import computer.iroh.Endpoint
@@ -209,7 +209,7 @@ fun simpleResponse(status: HttpStatusCode, text: String): HttpResponseData {
 /**
  * P2P 代理核心：
  *   WebView → 本地 ServerSocket (127.0.0.1:8080) → iroh QUIC 双向流（ALPN iroh-http/2）
- *   → 电脑端 meknow lib/p2p.js → jj.js 应用栈 → Meknow。
+ *   → 电脑端 menote lib/p2p.js → jj.js 应用栈 → MeNote。
  *
  * - 每个 HTTP 请求独占一条 QUIC 双向流；QUIC 连接级复用
  * - 连接失败/断线：无限自动重连（配对后无需重启隧道——电脑端白名单实时生效）
@@ -227,7 +227,7 @@ class IrohProxy(
         /**
          * 与电脑端 lib/p2p.js 对齐的 ALPN。
          */
-        val ALPN: ByteArray = "meknow-p2p/1".toByteArray(Charsets.UTF_8)
+        val ALPN: ByteArray = "menote-p2p/1".toByteArray(Charsets.UTF_8)
         private const val TAG = "IrohProxy"
         private const val RETRY_INTERVAL_MS = 5000L
         /** 重连退避上限：连续失败越多间隔越长（5s→10s→20s→40s→60s 封顶） */
@@ -443,7 +443,7 @@ class IrohProxy(
                 connAttemptsSinceSuccess = 0
                 refreshConnPath()
                 setState(State.READY)
-                log("③ 已连接服务器（${System.currentTimeMillis() - t1}ms${if (attempt > 1) "，第 $attempt 次尝试后成功" else ""}）→ 点「打开 Meknow」")
+                log("③ 已连接服务器（${System.currentTimeMillis() - t1}ms${if (attempt > 1) "，第 $attempt 次尝试后成功" else ""}）→ 点「打开 MeNote」")
                 return
             } catch(e: Exception) {
                 connAttemptsSinceSuccess++

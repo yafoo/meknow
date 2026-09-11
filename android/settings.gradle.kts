@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MeknowP2P"
+rootProject.name = "MeNote"
 include(":app")

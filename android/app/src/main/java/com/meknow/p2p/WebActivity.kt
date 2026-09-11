@@ -1,4 +1,4 @@
-package com.meknow.p2p
+package com.menote.p2p
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -65,7 +65,7 @@ class WebActivity : AppCompatActivity() {
             allowFileAccess = false
             allowContentAccess = false
             cacheMode = WebSettings.LOAD_DEFAULT
-            userAgentString = userAgentString + " MeknowP2P/1.1"
+            userAgentString = userAgentString + " MeNote/1.1"
         }
 
         // Cookie 持久化（admin 登录态）：进程级接受 + 本域 cookie

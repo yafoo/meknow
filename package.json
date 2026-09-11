@@ -1,5 +1,5 @@
 {
-  "name": "meknow",
+  "name": "menote",
   "version": "1.0.0",
   "description": "轻量级个人知识库系统",
   "main": "server.js",

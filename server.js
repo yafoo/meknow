@@ -11,7 +11,7 @@ process.on('uncaughtException', (err) => {
 const port = 3000;
 const app = new App();
 app.listen(port, async function(err){
-    !err && Logger.system('Meknow server is ready on http://localhost:' + port);
+    !err && Logger.system('MeNote server is ready on http://localhost:' + port);
     // P2P 服务（lib/p2p.js，官方 @number0/iroh）：随主服务启动
     if(!err) {
         try {

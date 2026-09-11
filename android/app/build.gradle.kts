@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.meknow.p2p"
+    namespace = "com.menote.p2p"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.meknow.p2p"
+        applicationId = "com.menote.p2p"
         minSdk = 29
         targetSdk = 35
         versionCode = 13

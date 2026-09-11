@@ -17,7 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Meknow"
+            android:text="MeNote"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -88,7 +88,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="打开 Meknow" />
+            android:text="打开 MeNote" />
     </LinearLayout>
 
     <!-- 本机节点 ID：标签一行，值一行（点击复制，小号等宽字体防换行） -->
