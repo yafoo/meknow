@@ -74,14 +74,18 @@ class WebActivity : AppCompatActivity() {
             setAcceptThirdPartyCookies(webView, false)
         }
 
+        // 端口跟随代理实际监听值（被占用会 +1）；未启动回退默认 3107
+        // —— 定义在 webViewClient 之前：导航白名单要引用它做端口校验
+        val port = ProxyService.proxy?.actualPort?.takeIf { it > 0 } ?: 3107
+
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(
                 view: WebView,
                 request: WebResourceRequest
             ): Boolean {
                 val url = request.url
-                // 只放行本地代理，其他一律拦截（保持隧道封闭）
-                if (url.host == "127.0.0.1" || url.host == "localhost") {
+                // 只放行本机代理实际端口（防本地其他端口服务诱导导航骗走 cookie）
+                if ((url.host == "127.0.0.1" || url.host == "localhost") && url.port == port) {
                     return false
                 }
                 return true
@@ -117,8 +121,6 @@ class WebActivity : AppCompatActivity() {
 
         webView.settings.mediaPlaybackRequiresUserGesture = false
 
-        // 端口跟随代理实际监听值（被占用会 +1）；未启动回退默认 3107
-        val port = ProxyService.proxy?.actualPort?.takeIf { it > 0 } ?: 3107
         webView.loadUrl("http://127.0.0.1:$port/admin/login")
     }
 
