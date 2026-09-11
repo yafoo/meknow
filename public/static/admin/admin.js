@@ -59,11 +59,14 @@ const store = reactive({
     isMobile: false,
     mobileView: 'list',
     mobileSidebarOpen: false,
+    // 抽屉"还原现场"时跳过滑出动效（no-anim 类），正常开关不受影响
+    sidebarNoAnim: false,
 
     // 打开分类抽屉（移动端）
     openSidebar() {
         if(this.isMobile) {
             if(!this.mobileSidebarOpen) {
+                this.sidebarNoAnim = false;    // 正常打开：带滑出动效
                 this.mobileSidebarOpen = true;
                 history.pushState({ mekSidebar: true }, '');
             }
@@ -76,6 +79,7 @@ const store = reactive({
     // 跳转路由前关闭传 false——标记条目留在栈里，返回 workspace 时由 popstate 重新打开）
     closeSidebar(consumeHistory = true) {
         if(this.mobileSidebarOpen) {
+            this.sidebarNoAnim = false;    // 恢复动效：遮罩/按钮关闭是主动操作，滑动收回
             this.mobileSidebarOpen = false;
             if(this.isMobile && consumeHistory && history.state && history.state.mekSidebar) {
                 history.back();
@@ -138,8 +142,12 @@ const store = reactive({
                 // ① 抽屉正开着（直接手势关闭，正常链路）
                 // ② 抽屉关着（从设置等页面返回 workspace）→ 重新打开抽屉还原现场
                 if(this.mobileSidebarOpen) {
+                    this.sidebarNoAnim = false;    // 正常链路：后续开关恢复动效
                     this.mobileSidebarOpen = false;
                 } else {
+                    // 从设置等页面返回 workspace：无动效直接显示，
+                    // 给人"抽屉一直开着"的感觉，消除二次滑出的怪异观感
+                    this.sidebarNoAnim = true;
                     this.mobileSidebarOpen = true;
                 }
             } else if(this.mobileSidebarOpen) {
@@ -1493,7 +1501,7 @@ const Workspace = {
             <div class="sidebar-overlay" v-if="store.mobileSidebarOpen" @click="store.closeSidebar()"></div>
 
             <el-container>
-                <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': store.mobileSidebarOpen }">
+                <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': store.mobileSidebarOpen, 'no-anim': store.sidebarNoAnim }">
                     <CategoryTree />
                 </el-aside>
                 <el-aside width="280px" class="note-list-aside" :class="{ 'note-list-hidden': store.noteListHidden, 'mobile-list-view': store.isMobile && store.mobileView === 'list', 'mobile-editor-behind': store.isMobile && store.mobileView === 'editor' }">

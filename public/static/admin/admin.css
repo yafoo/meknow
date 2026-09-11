@@ -1481,6 +1481,11 @@ html, body {
         box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
     }
 
+    /* 返回还原现场：无动效直接显示（给人"抽屉一直开着"的感觉） */
+    .workspace-aside.sidebar-visible.no-anim {
+        transition: none;
+    }
+
     /* 笔记列表：单栏模式下占满全宽，编辑器视图时整体滑出 */
     .note-list-aside {
         position: absolute;
