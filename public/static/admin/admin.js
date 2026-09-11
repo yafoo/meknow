@@ -72,7 +72,8 @@ const store = reactive({
         }
     },
 
-    // 关闭分类抽屉（移动端；consumeHistory=true 由返回手势触发，避免二次 back）
+    // 关闭分类抽屉（移动端；consumeHistory=true 由遮罩点击/手势触发，避免二次 back；
+    // 跳转路由前关闭传 false——标记条目留在栈里，返回 workspace 时由 popstate 重新打开）
     closeSidebar(consumeHistory = true) {
         if(this.mobileSidebarOpen) {
             this.mobileSidebarOpen = false;
@@ -80,6 +81,15 @@ const store = reactive({
                 history.back();
             }
         }
+    },
+
+    // 侧栏路由按钮（设置/用户/图谱/Token/P2P）：先关抽屉再跳转。
+    // 抽屉关闭时保留栈里的 mekSidebar 标记（不 back）——从目标页返回时
+    // popstate 落到该标记条目，抽屉重新打开，还原离开前的现场；
+    // 再按一次返回才真正关抽屉（pop 标记条目，走正常手势链）。
+    navigateFromSidebar(path) {
+        this.closeSidebar(false);
+        window.__routerPush && window.__routerPush(path);
     },
 
     // 进入编辑器视图（移动端单栏模式）
@@ -120,11 +130,24 @@ const store = reactive({
         this.updateMobileState();
         window.addEventListener('resize', () => this.updateMobileState());
 
-        // 安卓返回手势拦截：优先关分类抽屉，其次回列表，不退出页面
+        // 安卓返回手势拦截：优先还原分类抽屉现场，其次关抽屉/回列表，不退出页面
         window.addEventListener('popstate', () => {
             if(!this.isMobile) return;
-            if(this.mobileSidebarOpen) {
+            if(history.state && history.state.mekSidebar) {
+                // 落在抽屉标记条目：两种情形——
+                // ① 抽屉正开着（直接手势关闭，正常链路）
+                // ② 抽屉关着（从设置等页面返回 workspace）→ 重新打开抽屉还原现场
+                if(this.mobileSidebarOpen) {
+                    this.mobileSidebarOpen = false;
+                } else {
+                    this.mobileSidebarOpen = true;
+                }
+            } else if(this.mobileSidebarOpen) {
+                // 标记条目已不在栈顶（路由跳转顶掉了 state 对象位置），单纯关抽屉
                 this.mobileSidebarOpen = false;
+            } else if(history.state && history.state.mekEditor) {
+                // 编辑器标记条目（进编辑器前抽屉未关的罕见交错）：只回列表
+                this.mobileView = 'list';
             } else if(this.mobileView === 'editor') {
                 this.mobileView = 'list';
             }
@@ -556,21 +579,21 @@ const CategoryTree = {
             </el-dialog>
 
             <div class="tree-footer">
-                <div class="user-info" @click="$router.push('/admin/profile')">
+                <div class="user-info" @click="store.navigateFromSidebar('/admin/profile')">
                     <el-icon><User /></el-icon>
                     <span class="username">{{ store.username || '未登录' }}</span>
                 </div>
                 <div class="tree-footer-actions">
-                    <el-button size="small" text @click="$router.push('/admin/settings')" title="站点设置">
+                    <el-button size="small" text @click="store.navigateFromSidebar('/admin/settings')" title="站点设置">
                         <el-icon><Setting /></el-icon>
                     </el-button>
-                    <el-button size="small" text @click="$router.push('/admin/tokens')" title="Token 管理">
+                    <el-button size="small" text @click="store.navigateFromSidebar('/admin/tokens')" title="Token 管理">
                         <el-icon><Key /></el-icon>
                     </el-button>
-                    <el-button size="small" text @click="$router.push('/admin/graph')" title="知识图谱">
+                    <el-button size="small" text @click="store.navigateFromSidebar('/admin/graph')" title="知识图谱">
                         <el-icon><Share /></el-icon>
                     </el-button>
-                    <el-button size="small" text @click="$router.push('/admin/p2p')" title="P2P 管理">
+                    <el-button size="small" text @click="store.navigateFromSidebar('/admin/p2p')" title="P2P 管理">
                         <el-icon><Connection /></el-icon>
                     </el-button>
                     <el-button size="small" text @click="logout" title="退出登录">
@@ -2636,6 +2659,10 @@ const router = createRouter({
     history: createWebHashHistory(),
     routes
 });
+
+// 侧栏跳转桥：store（组件外 reactive 对象）拿不到 this.$router，
+// navigateFromSidebar 经此跳转，与模板内 $router.push 等价
+window.__routerPush = (path) => router.push(path);
 
 // ==================== 创建应用 ====================
 const app = createApp({
