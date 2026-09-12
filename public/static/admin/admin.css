@@ -712,14 +712,31 @@ html, body {
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
 }
 
-.selected-icon {
+/* emoji 输入框：占满剩余宽度，文字放大显示 emoji */
+.icon-selector .icon-input {
+    flex: 1;
+}
+
+.icon-selector .icon-input .el-input__inner {
     font-size: 18px;
+    line-height: 30px;
 }
 
-.icon-preview {
-    font-size: 24px;
+/* 选择按钮：盒模型与输入框 wrapper 完全对齐（28px 内容 + 1px padding×2 + 1px border×2 = 32px）。
+   el-button 的尺寸由 --el-button-size 变量控制、admin.css 又全局改了 padding，
+   两层叠加导致它比输入框高 —— 直接锁死盒模型不再依赖变量 */
+.icon-pick-btn {
+    height: 32px !important;
+    line-height: 30px !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .icon-grid {
@@ -728,6 +745,61 @@ html, body {
     gap: 4px;
     padding: 4px;
     box-sizing: border-box;
+}
+
+/* emoji 选择器：输入 + 分组标签 + 滚动网格 */
+.emoji-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.emoji-groups {
+    display: flex;
+    flex-wrap: nowrap;            /* 单行，不换行 */
+    gap: 4px;
+    overflow-x: auto;             /* 超宽横向滑动 */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;        /* 隐藏滚动条（滑动操作仍可用） */
+    padding-bottom: 2px;
+}
+
+.emoji-groups::-webkit-scrollbar {
+    display: none;
+}
+
+.emoji-group-tab {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--el-text-color-regular);
+    background: var(--el-fill-color-light);
+    user-select: none;
+    flex-shrink: 0;               /* 横滚容器内不被压缩 */
+    white-space: nowrap;
+}
+
+.emoji-group-tab:hover {
+    background: var(--el-fill-color);
+}
+
+.emoji-group-tab.active {
+    background: var(--el-color-primary);
+    color: #fff;
+}
+
+.emoji-scroll {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+/* 手机端：emoji 弹层滚动跟手 */
+@media (max-width: 768px) {
+    .emoji-scroll {
+        max-height: 180px;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 .icon-item {

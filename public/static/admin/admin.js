@@ -536,31 +536,57 @@ const CategoryTree = {
                 </template>
             </el-tree>
 
-            <!-- 添加/编辑分类对话框 -->
-            <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px" append-to-body>
+            <!-- 添加/编辑分类对话框（点遮罩不关：表单防误触 + 防 emoji 弹窗变孤儿） -->
+            <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px" append-to-body :close-on-click-modal="false">
                 <el-form :model="cateForm" label-width="80px">
                     <el-form-item label="图标">
                         <div class="icon-selector">
-                            <el-popover trigger="click" placement="bottom" :width="260">
+                            <!-- 直接输入/粘贴 emoji 的输入框（文字放大显示） -->
+                            <el-input
+                                v-model="iconInput"
+                                placeholder="输入 emoji"
+                                class="icon-input"
+                                clearable
+                                @input="onIconInput"
+                            />
+                            <!-- 选择按钮：点开 emoji 分组弹窗（visible 受控，选中即关） -->
+                            <el-popover
+                                :visible="emojiPickerVisible"
+                                trigger="click"
+                                placement="bottom"
+                                :width="300"
+                                @hide="emojiPickerVisible = false"
+                            >
                                 <template #reference>
-                                    <el-button>
-                                        <span class="selected-icon">{{ cateForm.icon || '📁' }}</span>
-                                        <el-icon style="margin-left: 4px;"><ArrowDown /></el-icon>
+                                    <el-button class="icon-pick-btn" title="选择 emoji" @click="emojiPickerVisible = !emojiPickerVisible">
+                                        <el-icon><Grid /></el-icon>
                                     </el-button>
                                 </template>
                                 <template #default>
-                                    <div class="icon-grid">
-                                        <span
-                                            v-for="emoji in emojiList"
-                                            :key="emoji"
-                                            class="icon-item"
-                                            :class="{ active: cateForm.icon === emoji }"
-                                            @click="selectIcon(emoji)"
-                                        >{{ emoji }}</span>
+                                    <div class="emoji-picker">
+                                        <!-- 分组标签：单行横向滑动，不换行 -->
+                                        <div class="emoji-groups">
+                                            <span
+                                                v-for="g in emojiGroups"
+                                                :key="g.label"
+                                                class="emoji-group-tab"
+                                                :class="{ active: activeEmojiGroup === g.label }"
+                                                @click="activeEmojiGroup = g.label"
+                                            >{{ g.label }}</span>
+                                        </div>
+                                        <!-- 当前分组网格（限高滚动） -->
+                                        <div class="icon-grid emoji-scroll">
+                                            <span
+                                                v-for="emoji in activeGroupEmojis"
+                                                :key="emoji"
+                                                class="icon-item"
+                                                :class="{ active: cateForm.icon === emoji }"
+                                                @click="selectIcon(emoji)"
+                                            >{{ emoji }}</span>
+                                        </div>
                                     </div>
                                 </template>
                             </el-popover>
-                            <span class="icon-preview">{{ cateForm.icon || '📁' }}</span>
                         </div>
                     </el-form-item>
                     <el-form-item label="上级分类">
@@ -615,12 +641,76 @@ const CategoryTree = {
         const dialogVisible = ref(false);
         const dialogTitle = ref('添加分类');
 
-        // 常用emoji列表
-        const emojiList = [
-            '📁', '📚', '📝', '💼', '🎯', '💡', '🔬', '🎨', '🎵', '📷',
-            '🏠', '🌟', '🔥', '💎', '🎁', '📖', '💻', '📊', '📈', '🎓',
-            '🌈', '☕', '🍎', '🚀', '⚡', '🎪', '🎭', '🎲', '🏆', '🔔'
+        // emoji 分组数据：常用组保留原有 30 个；其余按语义分组，覆盖日常分类场景
+        const emojiGroups = [
+            { label: '常用', emojis: [
+                '📁', '📚', '📝', '💼', '🎯', '💡', '🔬', '🎨', '🎵', '📷',
+                '🏠', '🌟', '🔥', '💎', '🎁', '📖', '💻', '📊', '📈', '🎓',
+                '🌈', '☕', '🍎', '🚀', '⚡', '🎪', '🎭', '🎲', '🏆', '🔔'
+            ] },
+            { label: '表情', emojis: [
+                '😀', '😂', '😊', '😍', '🤔', '😎', '🥳', '😴', '😢', '😡',
+                '👍', '👎', '👏', '🙏', '💪', '🤝', '✌️', '🤞', '👀', '🧠',
+                '❤️', '💔', '💯', '🎉', '🥰', '😜', '🤗', '😌', '🫡', '🤩'
+            ] },
+            { label: '动植物', emojis: [
+                '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🦁',
+                '🐯', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🦆', '🦉',
+                '🐴', '🦄', '🐝', '🦋', '🐢', '🐍', '🐙', '🦀', '🐬', '🐳',
+                '🌵', '🌲', '🌳', '🌴', '🌱', '🌿', '☘️', '🍀', '🎍', '🌻',
+                '🌷', '🌸', '🌹', '🌺', '🌾', '🍁', '🍄', '🌰', '💐', '🪴'
+            ] },
+            { label: '食物', emojis: [
+                '🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍒', '🍑',
+                '🥭', '🍍', '🥥', '🥝', '🍅', '🥑', '🍆', '🥕', '🌽', '🥔',
+                '🍞', '🥐', '🥨', '🧀', '🍳', '🥓', '🍗', '🍖', '🌭', '🍔',
+                '🍟', '🍕', '🥪', '🌮', '🍜', '🍣', '🍱', '🍚', '🍲', '🍰',
+                '🎂', '🍫', '🍬', '🍭', '🍩', '🍪', '☕', '🍵', '🧋', '🍺'
+            ] },
+            { label: '活动', emojis: [
+                '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥅', '🎿',
+                '🏊', '🚴', '🏃', '🧘', '🏋️', '🤸', '⛹️', '🤾', '⛳', '🏹',
+                '🎮', '🕹️', '🎲', '🧩', '🎯', '🎨', '🎸', '🎹', '🎺', '🎻',
+                '🥁', '🎤', '🎧', '🎬', '🎭', '🎪', '🎫', '🏆', '🥇', '🏅'
+            ] },
+            { label: '物品', emojis: [
+                '⌚', '📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '💾', '💿', '📀',
+                '📷', '📹', '🎥', '📞', '📺', '📻', '⏰', '⏱️', '🔑', '🔒',
+                '🧰', '🔧', '🔨', '🪛', '🧲', '💉', '💊', '🩹', '🚗', '🚕',
+                '🚌', '🏎️', '✈️', '🚀', '🛸', '🚁', '⛵', '🚲', '🛴', '🛵'
+            ] },
+            { label: '自然', emojis: [
+                '🌞', '🌝', '🌚', '⭐', '🌟', '✨', '⚡', '☄️', '🌈', '❄️',
+                '🔥', '💧', '🌊', '☁️', '⛅', '🌪️', '🌫️', '🌙', '🌎', '🌍',
+                '🌏', '🌋', '⛰️', '🏔️', '🏕️', '🏖️', '🏜️', '🏝️', '🌾', '🌿'
+            ] },
+            { label: '符号', emojis: [
+                '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💗', '💓',
+                '✅', '❌', '❗', '❓', '❕', '💯', '🔔', '🔕', '🎵', '🎶',
+                '➕', '➖', '➗', '✖️', '♾️', '🔴', '🟡', '🟢', '🔵', '⚫'
+            ] }
         ];
+        const activeEmojiGroup = ref('常用');
+        // emoji 选择弹窗受控开关：选中即自动关（trigger=click 与受控 visible 共存时，
+        // 点击外部由 @hide 归位，点选图标由 selectIcon 主动关）
+        const emojiPickerVisible = ref(false);
+        const activeGroupEmojis = computed(() =>
+            (emojiGroups.find(g => g.label === activeEmojiGroup.value) || emojiGroups[0]).emojis
+        );
+
+        // 手动输入 emoji（输入框）：取首个字符组（emoji 可能是多 code point）
+        const iconInput = ref('');
+        const onIconInput = (val) => {
+            const v = String(val || '').trim();
+            if(v) {
+                // 用 [...v] 展开 code point（代理对正确处理），取第一个 emoji
+                cateForm.icon = [...v][0];
+            }
+        };
+
+        // dialog 任何方式关闭（esc/取消/保存/树刷新）时复位 emoji 弹窗——
+        // 防止 popover 挂在 body 上变成无锚点的孤儿层
+        watch(dialogVisible, (v) => { if(!v) emojiPickerVisible.value = false; });
 
         const cateForm = reactive({
             id: null,
@@ -731,6 +821,8 @@ const CategoryTree = {
 
         const selectIcon = (emoji) => {
             cateForm.icon = emoji;
+            iconInput.value = emoji;          // 输入框与选中态同步
+            emojiPickerVisible.value = false;  // 选中即关弹窗
         };
 
         const showAddDialog = () => {
@@ -740,6 +832,8 @@ const CategoryTree = {
             cateForm.icon = '📁';
             cateForm.name = '';
             cateForm.is_public = false;
+            iconInput.value = '';
+            activeEmojiGroup.value = '常用';   // 每次打开回到默认分组
             dialogVisible.value = true;
         };
 
@@ -751,6 +845,8 @@ const CategoryTree = {
                 cateForm.icon = '📁';
                 cateForm.name = '';
                 cateForm.is_public = false;
+                iconInput.value = '';
+                activeEmojiGroup.value = '常用';
                 dialogVisible.value = true;
             } else if(command === 'edit') {
                 dialogTitle.value = '编辑分类';
@@ -759,6 +855,8 @@ const CategoryTree = {
                 cateForm.icon = data.icon || '📁';
                 cateForm.name = data.name;
                 cateForm.is_public = data.is_public === 1;
+                iconInput.value = data.icon || '';
+                activeEmojiGroup.value = '常用';
                 dialogVisible.value = true;
             } else if(command === 'delete') {
                 try {
@@ -903,7 +1001,12 @@ const CategoryTree = {
             dialogTitle,
             cateForm,
             selectableParents,
-            emojiList,
+            emojiGroups,
+            activeEmojiGroup,
+            activeGroupEmojis,
+            emojiPickerVisible,
+            iconInput,
+            onIconInput,
             selectIcon,
             showAddDialog,
             handleCommand,
