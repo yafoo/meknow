@@ -864,11 +864,6 @@ html, body {
     font-size: 12px;
 }
 
-.el-input__inner {
-    height: 28px;
-    font-size: 12px;
-}
-
 .el-select .el-input__inner {
     height: 28px;
 }
@@ -889,24 +884,8 @@ html, body {
     font-size: 11px;
 }
 
-.el-dialog__header {
-    padding: 12px 16px;
-}
-
-.el-dialog__body {
-    padding: 16px;
-}
-
-.el-dialog__footer {
-    padding: 12px 16px;
-}
-
 .el-form-item {
     margin-bottom: 12px;
-}
-
-.el-form-item__label {
-    font-size: 12px;
 }
 
 /* ==================== 滚动条 ==================== */
@@ -930,10 +909,6 @@ html, body {
 
 /* ==================== 响应式（桌面/平板宽度调整，手机端规则见文件末尾） ==================== */
 @media (max-width: 1024px) {
-    .workspace-aside {
-        width: 180px !important;
-    }
-
     .note-list-aside {
         width: 240px !important;
     }
@@ -1793,9 +1768,8 @@ html, body {
         max-width: none;
     }
 
-    .settings-form .el-form-item__label {
-        width: auto !important;
-        text-align: left;
+    .el-form-item__label {
+        width: 70px !important;
     }
 
     /* Token 页 */

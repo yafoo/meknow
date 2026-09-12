@@ -1040,7 +1040,6 @@ const NoteList = {
                 <el-input
                     v-model="searchKeyword"
                     placeholder="搜索笔记..."
-                    size="small"
                     clearable
                     @input="onSearch"
                     @clear="onSearch"
@@ -1796,7 +1795,7 @@ const SiteSettings = {
                 <div class="page-header-actions"></div>
             </div>
             <div class="settings-content" v-loading="loading">
-                <el-form label-width="100px" class="settings-form">
+                <el-form label-width="90px" class="settings-form">
                     <el-form-item v-for="item in configItems" :key="item.key" :label="item.title">
                         <el-input v-if="item.type === 'input'" v-model="item.value" />
                         <el-input v-else-if="item.type === 'textarea'" v-model="item.value" type="textarea" :rows="3" />
