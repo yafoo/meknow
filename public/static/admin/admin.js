@@ -522,7 +522,9 @@ const CategoryTree = {
                                 <el-icon><Plus /></el-icon>
                             </el-button>
                             <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, data)">
-                                <el-icon class="action-icon"><MoreFilled /></el-icon>
+                                <el-button size="small" text class="node-menu-btn">
+                                    <el-icon class="action-icon"><MoreFilled /></el-icon>
+                                </el-button>
                                 <template #dropdown>
                                     <el-dropdown-menu>
                                         <el-dropdown-item command="add">新建子分类</el-dropdown-item>
@@ -1069,7 +1071,9 @@ const NoteList = {
                                 <el-icon><Delete /></el-icon>
                             </el-button>
                             <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, note)">
-                                <el-icon class="action-icon"><MoreFilled /></el-icon>
+                                <el-button size="small" text class="note-menu-btn">
+                                    <el-icon class="action-icon"><MoreFilled /></el-icon>
+                                </el-button>
                                 <template #dropdown>
                                     <el-dropdown-menu>
                                         <el-dropdown-item command="rename">重命名</el-dropdown-item>
@@ -1603,7 +1607,7 @@ const Workspace = {
             <div class="sidebar-overlay" v-if="store.mobileSidebarOpen" @click="store.closeSidebar()"></div>
 
             <el-container>
-                <el-aside width="200px" class="workspace-aside" :class="{ 'sidebar-visible': store.mobileSidebarOpen, 'no-anim': store.sidebarNoAnim }">
+                <el-aside width="220px" class="workspace-aside" :class="{ 'sidebar-visible': store.mobileSidebarOpen, 'no-anim': store.sidebarNoAnim }">
                     <CategoryTree />
                 </el-aside>
                 <el-aside width="280px" class="note-list-aside" :class="{ 'note-list-hidden': store.noteListHidden, 'mobile-list-view': store.isMobile && store.mobileView === 'list', 'mobile-editor-behind': store.isMobile && store.mobileView === 'editor' }">

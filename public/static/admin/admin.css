@@ -153,8 +153,13 @@ html, body {
 }
 
 .node-actions .el-button {
-    padding: 2px;
+    padding: 4px;
     height: auto;
+    min-height: 24px;    /* 点击区不小于 24px，防误触相邻列表项 */
+    min-width: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .node-actions .el-button .el-icon {
@@ -332,11 +337,15 @@ html, body {
 }
 
 .note-item {
-    padding: 8px 10px;
+    padding: 5px 10px;
     margin-bottom: 2px;
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s;
+}
+
+.note-item:first-child {
+    margin-top: 2px;
 }
 
 .note-item.sortable-ghost {
@@ -395,6 +404,7 @@ html, body {
     white-space: nowrap;
     flex: 1;
     min-width: 0;
+    line-height: 24px;
 }
 
 .note-item-time {
@@ -420,8 +430,13 @@ html, body {
 }
 
 .note-item-actions .el-button {
-    padding: 2px;
+    padding: 4px;
     height: auto;
+    min-height: 24px;    /* 点击区不小于 24px，防误触相邻列表项 */
+    min-width: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .note-item-actions .el-button .el-icon {
@@ -792,14 +807,7 @@ html, body {
 .emoji-scroll {
     max-height: 220px;
     overflow-y: auto;
-}
-
-/* 手机端：emoji 弹层滚动跟手 */
-@media (max-width: 768px) {
-    .emoji-scroll {
-        max-height: 180px;
-        -webkit-overflow-scrolling: touch;
-    }
+    -webkit-overflow-scrolling: touch;
 }
 
 .icon-item {
@@ -1035,7 +1043,7 @@ html, body {
 }
 
 .tree-footer-actions .el-button {
-    padding: 4px;
+    padding: 4px 6px;
     color: #909399;
 }
 
@@ -1045,7 +1053,7 @@ html, body {
 }
 
 .tree-footer-actions  .el-button+.el-button {
-    margin-left: 6px;
+    margin-left: 4px;
 }
 
 /* ==================== 统一页面头部 ==================== */
@@ -1624,7 +1632,7 @@ html, body {
 
     /* 笔记项操作常显 + 触摸目标 */
     .note-item {
-        padding: 12px 10px;
+        padding: 8px 10px;
     }
 
     .note-item-title {
